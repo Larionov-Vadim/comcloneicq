@@ -26,7 +26,7 @@ public class Reader implements Runnable, SerialPortEventListener {
         while (portList.hasMoreElements()) {
             portId = (CommPortIdentifier) portList.nextElement();
             if (portId.getPortType() == CommPortIdentifier.PORT_SERIAL) {
-                if (portId.getName().equals("COM4")) {
+                if (portId.getName().equals("COM6")) {
                     //                if (portId.getName().equals("/dev/term/a")) {
                     Reader reader = new Reader();
                 }

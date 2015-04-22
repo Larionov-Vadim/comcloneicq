@@ -1,5 +1,7 @@
 package layers.physical;
 
+import layers.physical.Settings.Settings;
+
 import java.util.List;
 
 /**
@@ -9,17 +11,11 @@ public class Test {
 
     public static void main(String[] args) {
         List<String> listNames = PhysicalLayerImpl.getAvailablePorts();
-
-        System.out.println("PortNames:");
-        for (String portName : listNames)
-            System.out.println("\t" + portName);
-
-
-        String receiverName = listNames.get(0);     // COM1
-        String senderName = listNames.get(1);       // COM2
-
-        System.out.println("\nreceiverName: " + receiverName);
-        System.out.println("senderName: " + senderName);
-
+        PhysicalLayerImpl physicalLayer = new PhysicalLayerImpl();
+        Settings settings = new Settings(listNames.get(5));
+        physicalLayer.connect(settings);
+        String msg = "Hello";
+        System.out.println(msg);
+        physicalLayer.send(msg.getBytes());
     }
 }

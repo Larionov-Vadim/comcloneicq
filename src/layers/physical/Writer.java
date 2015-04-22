@@ -26,7 +26,7 @@ public class Writer {
             portId = (CommPortIdentifier) portList.nextElement();
             System.out.println(portId.getName());
             if (portId.getPortType() == CommPortIdentifier.PORT_SERIAL) {
-                if (portId.getName().equals("COM3")) {
+                if (portId.getName().equals("COM5")) {
                     try {
                         serialPort = (SerialPort) portId.open("SimpleWriteApp", 2000);
                         outputStream = serialPort.getOutputStream();

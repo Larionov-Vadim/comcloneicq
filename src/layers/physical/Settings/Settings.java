@@ -30,7 +30,7 @@ public class Settings {
                              SerialPort.DATABITS_7, SerialPort.DATABITS_8);
     }
 
-    // TODO нужны enum-ы, Parity, stopbits
+    // TODO РЅСѓР¶РЅС‹ enum-С‹, Parity, stopbits
     public static List<Integer> getAvailableFlowControl() {
         return Arrays.asList(SerialPort.FLOWCONTROL_NONE);
     }

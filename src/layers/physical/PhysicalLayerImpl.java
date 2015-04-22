@@ -6,10 +6,7 @@ import layers.physical.Settings.Settings;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.TooManyListenersException;
+import java.util.*;
 import java.util.logging.*;
 
 /**
@@ -21,7 +18,7 @@ class PhysicalLayerImpl implements PhysicalLayer, SerialPortEventListener {
     private static final int TIMEOUT = 2000;
     private static List<String> availablePorts;
 
-    private CommPortIdentifier portId;
+    //private CommPortIdentifier portId;
     private SerialPort serialPort;
 
     private InputStream inputStream;
@@ -46,28 +43,39 @@ class PhysicalLayerImpl implements PhysicalLayer, SerialPortEventListener {
         return availablePorts;
     }
 
-    // TODO synchronized? Иии не готово
     @Override
     public synchronized void send(byte[] data) {
+//        serialPort.setRTS(false);
+//        try {
+//            Thread.sleep(100);
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
+
         try {
-            outputStream.write(data);
+            outputStream.write("hello".getBytes());
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
     public void connect(Settings settings) {
-        String port = settings.getPort();
+        if (serialPort != null)
+            disconnect();
 
+        String port = settings.getPort();
         try {
+            CommPortIdentifier portId = CommPortIdentifier.getPortIdentifier(port);
             serialPort = (SerialPort) portId.open(PORT_NAME, TIMEOUT);
+            LOGGER.info("Port " + port + " opened");
+
             serialPort.setSerialPortParams(settings.getBaudRate(), settings.getDataBits(),
                     settings.getStopBits(), settings.getParity());
             serialPort.setFlowControlMode(SerialPort.FLOWCONTROL_NONE);
 
             inputStream = serialPort.getInputStream();
             outputStream = serialPort.getOutputStream();
-        } catch (PortInUseException | UnsupportedCommOperationException | IOException e) {
+        } catch (PortInUseException | UnsupportedCommOperationException | IOException | NoSuchPortException e) {
             e.printStackTrace();
         }
 
@@ -84,11 +92,20 @@ class PhysicalLayerImpl implements PhysicalLayer, SerialPortEventListener {
         serialPort.setRTS(true);
         serialPort.setDTR(true);
 
+        serialPort.notifyOnBreakInterrupt(true);
+        serialPort.notifyOnCarrierDetect(true);
+        serialPort.notifyOnFramingError(true);
+        serialPort.notifyOnOutputEmpty(true);
+        serialPort.notifyOnRingIndicator(true);
+        serialPort.notifyOnOverrunError(true);
+        serialPort.notifyOnParityError(true);
+
         setConnected(true);
     }
 
     public synchronized void disconnect() {
         if (serialPort != null) {
+            System.out.println("Not null");
             try {
                 inputStream.close();
                 outputStream.close();
@@ -109,9 +126,17 @@ class PhysicalLayerImpl implements PhysicalLayer, SerialPortEventListener {
         else {
             LOGGER.info("Port is not opened");
         }
+        connected = false;
     }
 
 
+    private void setConnected(boolean connected) {
+        this.connected = connected;
+    }
+
+    public boolean isConnected() {
+        return connected;
+    }
 
     @Override
     public void serialEvent(SerialPortEvent event) {
@@ -120,28 +145,18 @@ class PhysicalLayerImpl implements PhysicalLayer, SerialPortEventListener {
                 System.out.println("BI");
                 break;
             case SerialPortEvent.CD:        // Carried Detect (наличие несущей)
-                System.out.println("CD");
+                System.out.println("CD=[" + serialPort.isCD() + "]");
                 break;
             case SerialPortEvent.CTS:       // Clear to Send (готовность передачи)
-                System.out.println("CTS");
+                System.out.println("CTS=[" + serialPort.isCTS() + "]");
                 break;
 
             case SerialPortEvent.DATA_AVAILABLE:
-                System.out.println("DATA_AVAILABLE");
-                byte[] readBuffer = new byte[200];
-
-                try {
-                    while (inputStream.available() > 0) {
-                        int numBytes = inputStream.read(readBuffer);
-                    }
-                    System.out.print(new String(readBuffer));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                dataAvailable();
                 break;
 
             case SerialPortEvent.DSR:       // Data set Ready (готовность источника данных)
-                System.out.println("DSR");
+                System.out.println("DSR=[" + serialPort.isDSR() + "]");
                 break;
             case SerialPortEvent.FE:        // Framing Error
                 System.out.println("FE");
@@ -156,23 +171,33 @@ class PhysicalLayerImpl implements PhysicalLayer, SerialPortEventListener {
                 System.out.println("PE");
                 break;
             case SerialPortEvent.RI:        // Ring Indicator (сигнал вызова)
-                System.out.println("RI");
+                System.out.println("RI=[" + serialPort.isRI() + "]");
                 break;
         }
     }
 
-    private void setConnected(boolean connected) {
-        this.connected = connected;
-    }
-
-    public boolean isConnected() {
-        return connected;
+    private void dataAvailable() {
+        System.out.println("DATA_AVAILABLE");
+        byte[] readBuffer = new byte[200];
+        try {
+            while (inputStream.available() > 0) {
+                int numBytes = inputStream.read(readBuffer);
+            }
+            System.out.print(new String(readBuffer));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public static void main(String[] args) {
         List<String> list = PhysicalLayerImpl.getAvailablePorts();
-        for (String str : list){
-            System.out.println(str);
-        }
+        Settings settings = new Settings(PhysicalLayerImpl.getAvailablePorts().get(4));
+
+        PhysicalLayerImpl physicalLayer = new PhysicalLayerImpl();
+        physicalLayer.connect(settings);
+        physicalLayer.connect(settings);
+        physicalLayer.connect(settings);
+        //physicalLayer.disconnect();
     }
+
 }
