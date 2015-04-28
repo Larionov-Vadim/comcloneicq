@@ -1,7 +1,6 @@
 package layers.datalink;
 
 import exceptions.DecodeException;
-import layers.PDU;
 import utils.Utils;
 
 import java.util.Arrays;
@@ -18,6 +17,13 @@ import java.util.Arrays;
  *      ACK - положительная квитанция о получении кадра
  *      RET - требованеи повторить передачу последнего кадра
  *      I - информационный кадр (кадр с данными)
+ * Размеры:
+ *      START_BYTE == STOP_BYTE -- 1 byte
+ *      TypeFrame -- 1 byte
+ *      flagFinal -- 1 byte
+ *      Data -- max size 128 * 2 == 256 byte (128 - исходные данные)
+ *      MinFrameSize -- 6 byte (с учётом START_BYTE и STOP_BYTE
+ *      MaxFrameSize -- 262 byte (с учётом START_BYTE и STOP_BYTE
  */
 public class Frame {
     public enum Type {                   // Тип кадра
@@ -27,8 +33,10 @@ public class Frame {
     private static final byte START_BYTE = (byte) 0xFF;
     private static final byte STOP_BYTE = (byte) 0xFF;
 
-    private static final int MIN_SIZE = 4;      // Наименьший размер кадра (закод.) без стартового и стопового бита
-    private static final int MAX_SIZE = 128;    // TODO Или 127?
+    // private static final int MIN_SIZE = 4;      // Наименьший размер кадра (закод.) без стартового и стопового бита
+    // private static final int MAX_SIZE = 128;    // Наибольший [128 байт для данных +
+
+    public static final int MAX_DATA_SIZE = 128;    // Максимальный размер данных data
 
     private static CRCCoder crcCoder = new CRCCoder();
 
@@ -38,7 +46,7 @@ public class Frame {
     private boolean correct = true;
 
 
-    public Frame(Type type) {
+    private Frame(Type type) {
         this.type = type;
     }
 
