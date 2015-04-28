@@ -1,7 +1,7 @@
 package layers.physical;
 
 import gnu.io.*;
-import layers.physical.Settings.Settings;
+import layers.physical.Settings.ComPortSettings;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -59,7 +59,7 @@ class PhysicalLayerImpl implements PhysicalLayer, SerialPortEventListener {
         }
     }
 
-    public void connect(Settings settings) {
+    public void connect(ComPortSettings settings) {
         if (serialPort != null)
             disconnect();
 
@@ -191,7 +191,7 @@ class PhysicalLayerImpl implements PhysicalLayer, SerialPortEventListener {
 
     public static void main(String[] args) {
         List<String> list = PhysicalLayerImpl.getAvailablePorts();
-        Settings settings = new Settings(PhysicalLayerImpl.getAvailablePorts().get(4));
+        ComPortSettings settings = new ComPortSettings(PhysicalLayerImpl.getAvailablePorts().get(4));
 
         PhysicalLayerImpl physicalLayer = new PhysicalLayerImpl();
         physicalLayer.connect(settings);

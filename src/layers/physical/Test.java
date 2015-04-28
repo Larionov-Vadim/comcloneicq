@@ -1,6 +1,6 @@
 package layers.physical;
 
-import layers.physical.Settings.Settings;
+import layers.physical.Settings.ComPortSettings;
 
 import java.util.List;
 
@@ -12,7 +12,7 @@ public class Test {
     public static void main(String[] args) {
         List<String> listNames = PhysicalLayerImpl.getAvailablePorts();
         PhysicalLayerImpl physicalLayer = new PhysicalLayerImpl();
-        Settings settings = new Settings(listNames.get(5));
+        ComPortSettings settings = new ComPortSettings(listNames.get(5));
         physicalLayer.connect(settings);
         String msg = "Hello";
         System.out.println(msg);

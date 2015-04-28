@@ -24,4 +24,11 @@ public class Utils {
     public static byte[] concatenate(byte[] A, byte b) {
         return concatenate(A, new byte[]{b});
     }
+
+    public static byte[] concatenate(byte a, byte b) {
+        byte[] C = new byte[2];
+        C[0] = a;
+        C[1] = b;
+        return C;
+    }
 }

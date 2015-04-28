@@ -9,14 +9,14 @@ import java.util.List;
 /**
  * Created by Vadim on 21.04.2015.
  */
-public class Settings {
+public class ComPortSettings {
     private String port;
     private int baudRate = 9600;                        // Default values
     private int dataBits = SerialPort.DATABITS_8;
     private int stopBits = SerialPort.STOPBITS_1;
     private int parity = SerialPort.PARITY_NONE;
 
-    public Settings(String port) {
+    public ComPortSettings(String port) {
         this.port = port;
     }
 
@@ -94,25 +94,25 @@ public class Settings {
     }
 
     public static void main(String[] args) {
-        List<String> availableDataBits = Settings.getAvailableDataBitsNames();
+        List<String> availableDataBits = ComPortSettings.getAvailableDataBitsNames();
         for(String str : availableDataBits) {
             System.out.println(str);
         }
         System.out.println(DataBitsEnum.contains(8));
 
-        List<String> availableFlowControls = Settings.getAvailableFlowControlsNames();
+        List<String> availableFlowControls = ComPortSettings.getAvailableFlowControlsNames();
         for(String str : availableFlowControls) {
             System.out.println(str);
         }
 
         System.out.println(FlowControlEnum.contains(8));
 
-        List<String> availableParity = Settings.getAvailableParityNames();
+        List<String> availableParity = ComPortSettings.getAvailableParityNames();
         for(String str : availableParity) {
             System.out.println(str);
         }
 
-        List<DataBitsEnum> databitsEnum = Settings.getAvailableDataBits();
+        List<DataBitsEnum> databitsEnum = ComPortSettings.getAvailableDataBits();
         for (DataBitsEnum databits : databitsEnum) {
             System.out.println(databits);
         }
