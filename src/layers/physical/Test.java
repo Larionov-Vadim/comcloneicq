@@ -10,8 +10,8 @@ import java.util.List;
 public class Test {
 
     public static void main(String[] args) {
-        List<String> listNames = PhysicalLayerImpl.getAvailablePorts();
-        PhysicalLayerImpl physicalLayer = new PhysicalLayerImpl();
+        List<String> listNames = PhysicalLayer.getAvailablePorts();
+        PhysicalLayer physicalLayer = new PhysicalLayer();
         ComPortSettings settings = new ComPortSettings(listNames.get(5));
         physicalLayer.connect(settings);
         String msg = "Hello";
