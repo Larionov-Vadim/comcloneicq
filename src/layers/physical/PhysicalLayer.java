@@ -1,6 +1,8 @@
 package layers.physical;
 
 import gnu.io.*;
+import layers.datalink.DatalinkLayer;
+import layers.datalink.Frame;
 import layers.physical.Settings.ComPortSettings;
 
 import java.io.IOException;
@@ -14,18 +16,26 @@ import java.util.logging.*;
  */
 public class PhysicalLayer implements SerialPortEventListener {
     private static Logger LOGGER = Logger.getLogger(PhysicalLayer.class.getName());
+
+    private DatalinkLayer datalinkLayer;
+
     private static final String PORT_NAME = "COM_CLONE_ICQ";
     private static final int TIMEOUT = 2000;
     private static List<String> availablePorts;
 
-    //private CommPortIdentifier portId;
+    private static byte START_BYTE = Frame.START_BYTE;
+    private static byte STOP_BYTE = Frame.STOP_BYTE;
+
     private SerialPort serialPort;
 
     private InputStream inputStream;
     private OutputStream outputStream;
-    private Thread readThread;
 
     private boolean connected;
+
+    public PhysicalLayer(DatalinkLayer datalinkLayer) {
+        this.datalinkLayer = datalinkLayer;
+    }
 
     public static List<String> getAvailablePorts(){
         if (availablePorts != null)
@@ -52,9 +62,9 @@ public class PhysicalLayer implements SerialPortEventListener {
 //        }
 
         try {
-            outputStream.write("hello".getBytes());
+            outputStream.write(data);
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.WARNING, "Обработанное исключение", e);
         }
     }
 
@@ -75,7 +85,7 @@ public class PhysicalLayer implements SerialPortEventListener {
             inputStream = serialPort.getInputStream();
             outputStream = serialPort.getOutputStream();
         } catch (PortInUseException | UnsupportedCommOperationException | IOException | NoSuchPortException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.WARNING, "Обработанное исключение", e);
         }
 
         try {
@@ -84,15 +94,16 @@ public class PhysicalLayer implements SerialPortEventListener {
 
             serialPort.notifyOnCTS(true);
             serialPort.notifyOnDSR(true);
+            serialPort.notifyOnCarrierDetect(true);
         } catch (TooManyListenersException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.WARNING, "Обработанное исключение", e);
         }
 
         serialPort.setRTS(true);
         serialPort.setDTR(true);
 
+        // TODO удалить
         serialPort.notifyOnBreakInterrupt(true);
-        serialPort.notifyOnCarrierDetect(true);
         serialPort.notifyOnFramingError(true);
         serialPort.notifyOnOutputEmpty(true);
         serialPort.notifyOnRingIndicator(true);
@@ -104,12 +115,11 @@ public class PhysicalLayer implements SerialPortEventListener {
 
     public synchronized void disconnect() {
         if (serialPort != null) {
-            System.out.println("Not null");
             try {
                 inputStream.close();
                 outputStream.close();
             } catch (IOException e) {
-                e.printStackTrace();
+                LOGGER.log(Level.WARNING, "Обработанное исключение", e);
             }
 
             serialPort.setRTS(false);
@@ -141,62 +151,68 @@ public class PhysicalLayer implements SerialPortEventListener {
     public void serialEvent(SerialPortEvent event) {
         switch(event.getEventType()) {
             case SerialPortEvent.BI:        // Break Interrupt
-                System.out.println("BI");
+                LOGGER.warning("Break Interrupt");
                 break;
             case SerialPortEvent.CD:        // Carried Detect (наличие несущей)
+                // TODO
                 System.out.println("CD=[" + serialPort.isCD() + "]");
                 break;
             case SerialPortEvent.CTS:       // Clear to Send (готовность передачи)
                 System.out.println("CTS=[" + serialPort.isCTS() + "]");
                 break;
-
             case SerialPortEvent.DATA_AVAILABLE:
                 dataAvailable();
                 break;
-
             case SerialPortEvent.DSR:       // Data set Ready (готовность источника данных)
                 System.out.println("DSR=[" + serialPort.isDSR() + "]");
                 break;
             case SerialPortEvent.FE:        // Framing Error
-                System.out.println("FE");
+                LOGGER.warning("Framing Error");
                 break;
             case SerialPortEvent.OE:        // Overrun Error
-                System.out.println("OE");
+                LOGGER.warning("Overrun Error");
                 break;
             case SerialPortEvent.OUTPUT_BUFFER_EMPTY:
-                System.out.println("OUTPUT_BUFFER_EMPTY");
                 break;
             case SerialPortEvent.PE:        // Parity Error
-                System.out.println("PE");
+                LOGGER.warning("Parity error");
                 break;
             case SerialPortEvent.RI:        // Ring Indicator (сигнал вызова)
-                System.out.println("RI=[" + serialPort.isRI() + "]");
                 break;
         }
     }
 
     private void dataAvailable() {
-        System.out.println("DATA_AVAILABLE");
-        byte[] readBuffer = new byte[200];
+        ArrayList<Byte> bytes = new ArrayList<>(Frame.MAX_DATA_SIZE);
+
         try {
-            while (inputStream.available() > 0) {
-                int numBytes = inputStream.read(readBuffer);
+            byte start = (byte) inputStream.read();
+            if (start == START_BYTE) {
+                byte b;
+                while (true) {
+                    b = (byte) inputStream.read();
+                    if (b == STOP_BYTE)
+                        break;
+                    bytes.add(b);
+                }
             }
-            System.out.print(new String(readBuffer));
+            else {
+                LOGGER.log(Level.WARNING, "Принятый байт данных != START_BYTE");
+            }
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Обработанное исключение", e);
         }
+
+        // Медленно
+        byte[] frame = new byte[bytes.size()];
+        for (int i = 0; i < bytes.size(); ++i) {
+            frame[i] = bytes.get(i);
+        }
+        getUpperLayer().receive(frame);
     }
 
-    public static void main(String[] args) {
-        List<String> list = PhysicalLayer.getAvailablePorts();
-        ComPortSettings settings = new ComPortSettings(PhysicalLayer.getAvailablePorts().get(4));
-
-        PhysicalLayer physicalLayer = new PhysicalLayer();
-        physicalLayer.connect(settings);
-        physicalLayer.connect(settings);
-        physicalLayer.connect(settings);
-        //physicalLayer.disconnect();
+    public DatalinkLayer getUpperLayer() {
+        return datalinkLayer;
     }
 
 }

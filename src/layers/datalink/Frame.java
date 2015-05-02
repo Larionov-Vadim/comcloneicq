@@ -4,6 +4,7 @@ import exceptions.DecodeException;
 import utils.Utils;
 
 import java.util.Arrays;
+import java.util.logging.Logger;
 
 /**
  * Created by Vadim on 20.04.2015.
@@ -22,21 +23,32 @@ import java.util.Arrays;
  *      TypeFrame -- 1 byte
  *      flagFinal -- 1 byte
  *      Data -- max size 128 * 2 == 256 byte (128 - исходные данные)
- *      MinFrameSize -- 6 byte (с учётом START_BYTE и STOP_BYTE
- *      MaxFrameSize -- 262 byte (с учётом START_BYTE и STOP_BYTE
+ *      MinFrameSize -- 6 byte (с учётом START_BYTE и STOP_BYTE)
+ *      MaxFrameSize -- 262 byte (с учётом START_BYTE и STOP_BYTE)
  */
 public class Frame {
+    private static Logger LOGGER = Logger.getLogger(Frame.class.getName());
     public enum Type {                   // Тип кадра
         ACK, RET, I, ERROR
     }
 
-    private static final byte START_BYTE = (byte) 0xFF;
-    private static final byte STOP_BYTE = (byte) 0xFF;
+    public static final byte START_BYTE = (byte) 0xFF;
+    public static final byte STOP_BYTE = (byte) 0xFF;
 
-    // private static final int MIN_SIZE = 4;      // Наименьший размер кадра (закод.) без стартового и стопового бита
-    // private static final int MAX_SIZE = 128;    // Наибольший [128 байт для данных +
+    /**
+     * Максимальный размер данный в data в байтах (после сериализации)
+     */
+    public static final int MAX_DATA_SIZE = 128;
 
-    public static final int MAX_DATA_SIZE = 128;    // Максимальный размер данных data
+    /**
+     * Минимальный размер (в байтах) кадра с учётом стартовых и стоповых бит
+     */
+    public static final int MIN_FRAME_SIZE = 6;
+
+    /**
+     * Максимальный размер (в байтах) кадра с учётом стартовых и стоповых бит
+     */
+    public static final int MAX_FRAME_SIZE = 262;
 
     private static CRCCoder crcCoder = new CRCCoder();
 
@@ -112,14 +124,11 @@ public class Frame {
         return Utils.concatenate(frame, STOP_BYTE);
     }
 
-    // TODO стартовые и стоповые биты отсекаются на физическом уровне
     public static Frame deserialize(byte[] data) {
         try {
             data = crcCoder.decode(data);
         } catch (DecodeException e) {
-            Frame frame = Frame.newERRORFrame();
-            e.printStackTrace();                                    // TODO Logger
-            return frame;
+            return Frame.newERRORFrame();
         }
 
         // Структура data: |typeFrame|byteFlagFinal|data|
@@ -130,6 +139,7 @@ public class Frame {
         return new Frame(typeFrame, info, flagFinal);
     }
 
+    // TODO удалить
     public static void main(String[] args) {
         byte[] dataIn = "Hello!".getBytes();
         Frame frameIn = new Frame(Type.I, dataIn, true);
