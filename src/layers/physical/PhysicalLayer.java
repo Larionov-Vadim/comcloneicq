@@ -84,6 +84,14 @@ public class PhysicalLayer implements SerialPortEventListener {
 
             inputStream = serialPort.getInputStream();
             outputStream = serialPort.getOutputStream();
+
+            // TODO
+            System.out.println("isCD: " + serialPort.isCD());
+            System.out.println("isCTD: " + serialPort.isCTS());
+            System.out.println("isDRT: " + serialPort.isDSR());
+            System.out.println("isDTR: " + serialPort.isDTR());
+            System.out.println("isRTS: " + serialPort.isRTS());
+
         } catch (PortInUseException | UnsupportedCommOperationException | IOException | NoSuchPortException e) {
             LOGGER.log(Level.WARNING, "Обработанное исключение", e);
         }
@@ -182,6 +190,8 @@ public class PhysicalLayer implements SerialPortEventListener {
         }
     }
 
+
+
     private void dataAvailable() {
         ArrayList<Byte> bytes = new ArrayList<>(Frame.MAX_DATA_SIZE);
 
@@ -197,7 +207,8 @@ public class PhysicalLayer implements SerialPortEventListener {
                 }
             }
             else {
-                LOGGER.log(Level.WARNING, "Принятый байт данных != START_BYTE");
+                System.out.print(start + " ");
+                // LOGGER.log(Level.WARNING, "Принятый байт данных != START_BYTE");
             }
         } catch (IOException e) {
             LOGGER.log(Level.SEVERE, "Обработанное исключение", e);

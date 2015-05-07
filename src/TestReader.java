@@ -12,9 +12,15 @@ public class TestReader {
     private static DatalinkLayer datalinkLayer = new DatalinkLayer();
 
     public static void main(String[] args) {
-        String portName = PhysicalLayer.getAvailablePorts().get(1);                 // Com2
+        System.out.println("BLA-BLA-BLA");
+
+        for (String str : PhysicalLayer.getAvailablePorts()) {
+            System.out.println(str);
+        }
+
+        String portName = PhysicalLayer.getAvailablePorts().get(2);
         int baudRate = ComPortSettings.getAvailableBaudRates().get(5);
-        DataBitsEnum databits = ComPortSettings.getAvailableDataBits().get(0);
+        DataBitsEnum databits = ComPortSettings.getAvailableDataBits().get(3);
         StopBitsEnum stopbits = ComPortSettings.getAvailableStopBits().get(0);
         ParityEnum parity = ComPortSettings.getAvailableParity().get(0);
 

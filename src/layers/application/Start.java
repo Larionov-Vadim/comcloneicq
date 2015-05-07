@@ -7,7 +7,7 @@ import javax.swing.*;
 
 public class Start {
     public static void main (String [] args) {
-        JFrame myWindow = new JFrame("ЯРУССКИЙ");
+        JFrame myWindow = new JFrame("Hello");
         myWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         myWindow.setSize(400, 300);
         myWindow.setVisible(true);

@@ -127,7 +127,12 @@ public class DatalinkLayer implements Runnable {
                 }
 
                 else if (!framesToSend.isEmpty()) {
-                    getLowerLayer().send(framesToSend.peek().serialize());
+                    byte[] bytes = framesToSend.peek().serialize();
+//                    System.out.println("bytes: " + bytes.length);
+//                    for (int i = 0; i < bytes.length; ++i) {
+//                        System.out.print(bytes[i] + " ");
+//                    }
+                    getLowerLayer().send(bytes);
                     permissionToTransmit.set(false);
                 }
             }
@@ -176,8 +181,6 @@ public class DatalinkLayer implements Runnable {
     }
 
     private void receivedInfoFrame(Frame frame) {
-        // Из списка receivedFrames достаём все элементы и собираем их в один объект
-
         if (frame.isFinalFrame()) {
             byte[] data = new byte[0];
             for(Frame f : receivedFrames)
