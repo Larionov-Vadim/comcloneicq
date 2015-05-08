@@ -1,5 +1,6 @@
 package layers.datalink;
 
+import layers.application.ApplicationLayer;
 import layers.physical.PhysicalLayer;
 import layers.physical.Settings.ComPortSettings;
 import utils.Utils;
@@ -21,6 +22,7 @@ public class DatalinkLayer implements Runnable {
     private static Logger LOGGER = Logger.getLogger(DatalinkLayer.class.getName());
     // TODO ApplicationLayer
     private PhysicalLayer physicalLayer;
+    private ApplicationLayer applicationLayer;
 
     private Queue<Frame> framesToSend = new ConcurrentLinkedQueue<>();
     private List<Frame> receivedFrames = new LinkedList<>();
@@ -33,9 +35,16 @@ public class DatalinkLayer implements Runnable {
     private boolean connected = false;
 
 
-    // TODO Нужен ApplicationLayer
+    // TODO РќСѓР¶РµРЅ ApplicationLayer
+    public DatalinkLayer(ApplicationLayer applicationLayer) {
+        this.physicalLayer = new PhysicalLayer(this);
+        this.applicationLayer = applicationLayer;
+    }
+
+    // TODO удалить
     public DatalinkLayer() {
         this.physicalLayer = new PhysicalLayer(this);
+        this.applicationLayer = null;
     }
 
     private byte[] serialize(Object object) throws IOException {
@@ -52,19 +61,19 @@ public class DatalinkLayer implements Runnable {
     }
 
     /**
-     * Преобразует пакеты прикладного уровня в кадры канального уровня и кладёт их в очередь.
-     *  В другом потоке происходит отправка кадров на физический уровень.
-     * @param object Сериализуемый объект, пакет прикладного уровня.
+     * РџСЂРµРѕР±СЂР°Р·СѓРµС‚ РїР°РєРµС‚С‹ РїСЂРёРєР»Р°РґРЅРѕРіРѕ СѓСЂРѕРІРЅСЏ РІ РєР°РґСЂС‹ РєР°РЅР°Р»СЊРЅРѕРіРѕ СѓСЂРѕРІРЅСЏ Рё РєР»Р°РґС‘С‚ РёС… РІ РѕС‡РµСЂРµРґСЊ.
+     *  Р’ РґСЂСѓРіРѕРј РїРѕС‚РѕРєРµ РїСЂРѕРёСЃС…РѕРґРёС‚ РѕС‚РїСЂР°РІРєР° РєР°РґСЂРѕРІ РЅР° С„РёР·РёС‡РµСЃРєРёР№ СѓСЂРѕРІРµРЅСЊ.
+     * @param object РЎРµСЂРёР°Р»РёР·СѓРµРјС‹Р№ РѕР±СЉРµРєС‚, РїР°РєРµС‚ РїСЂРёРєР»Р°РґРЅРѕРіРѕ СѓСЂРѕРІРЅСЏ.
      */
     public synchronized void send(Object object) {
         byte[] data = new byte[0];
         try {
             data = serialize(object);
         } catch (IOException e) {
-            LOGGER.log(Level.SEVERE, "Ошибка сериализации объекта", e);
+            LOGGER.log(Level.SEVERE, "РћС€РёР±РєР° СЃРµСЂРёР°Р»РёР·Р°С†РёРё РѕР±СЉРµРєС‚Р°", e);
         }
 
-        // Дробим данные на кадры
+        // Р”СЂРѕР±РёРј РґР°РЅРЅС‹Рµ РЅР° РєР°РґСЂС‹
         int chunkSize = Frame.MAX_DATA_SIZE;
         int countFrames = data.length / chunkSize + (data.length % chunkSize == 0 ? 0 : 1);
         boolean flagFinal = false;
@@ -108,9 +117,9 @@ public class DatalinkLayer implements Runnable {
     @Override
     public void run() {
         /**
-         * Пока есть соединение, проверяем очередь framesToSend
-         * Если очередь не пуста, то отправляем пакет и ждём ACK
-         *      Если пришёл RET, либо TIMEOUT истёк, то повторяем отправку кадра
+         * РџРѕРєР° РµСЃС‚СЊ СЃРѕРµРґРёРЅРµРЅРёРµ, РїСЂРѕРІРµСЂСЏРµРј РѕС‡РµСЂРµРґСЊ framesToSend
+         * Р•СЃР»Рё РѕС‡РµСЂРµРґСЊ РЅРµ РїСѓСЃС‚Р°, С‚Рѕ РѕС‚РїСЂР°РІР»СЏРµРј РїР°РєРµС‚ Рё Р¶РґС‘Рј ACK
+         *      Р•СЃР»Рё РїСЂРёС€С‘Р» RET, Р»РёР±Рѕ TIMEOUT РёСЃС‚С‘Рє, С‚Рѕ РїРѕРІС‚РѕСЂСЏРµРј РѕС‚РїСЂР°РІРєСѓ РєР°РґСЂР°
          */
         while(connected) {
             if (permissionToTransmit.get()) {
@@ -142,8 +151,8 @@ public class DatalinkLayer implements Runnable {
     }
 
     /**
-     * Получает кадры с физического уровня
-     * @param data Массив байт (кадр) с физического уровня
+     * РџРѕР»СѓС‡Р°РµС‚ РєР°РґСЂС‹ СЃ С„РёР·РёС‡РµСЃРєРѕРіРѕ СѓСЂРѕРІРЅСЏ
+     * @param data РњР°СЃСЃРёРІ Р±Р°Р№С‚ (РєР°РґСЂ) СЃ С„РёР·РёС‡РµСЃРєРѕРіРѕ СѓСЂРѕРІРЅСЏ
      */
     public void receive(byte[] data) {
         Frame frame = Frame.deserialize(data);
@@ -165,18 +174,18 @@ public class DatalinkLayer implements Runnable {
                     permissionToTransmit.set(true);
                     break;
                 default:
-                    LOGGER.warning("Кадр неизвестного типа");
+                    LOGGER.warning("РљР°РґСЂ РЅРµРёР·РІРµСЃС‚РЅРѕРіРѕ С‚РёРїР°");
             }
         }
         else {
-            LOGGER.log(Level.INFO, "Кадр испорчен");
+            LOGGER.log(Level.INFO, "РљР°РґСЂ РёСЃРїРѕСЂС‡РµРЅ");
             sendRet.set(true);
             permissionToTransmit.set(true);
         }
     }
 
     private void receivedInfoFrame(Frame frame) {
-        // Из списка receivedFrames достаём все элементы и собираем их в один объект
+        // Р�Р· СЃРїРёСЃРєР° receivedFrames РґРѕСЃС‚Р°С‘Рј РІСЃРµ СЌР»РµРјРµРЅС‚С‹ Рё СЃРѕР±РёСЂР°РµРј РёС… РІ РѕРґРёРЅ РѕР±СЉРµРєС‚
 
         if (frame.isFinalFrame()) {
             byte[] data = new byte[0];
@@ -190,10 +199,10 @@ public class DatalinkLayer implements Runnable {
             try {
                 object = deserialize(data);
             } catch (IOException | ClassNotFoundException e) {
-                LOGGER.log(Level.SEVERE, "Ошибка десериализации объекта", e);
+                LOGGER.log(Level.SEVERE, "РћС€РёР±РєР° РґРµСЃРµСЂРёР°Р»РёР·Р°С†РёРё РѕР±СЉРµРєС‚Р°", e);
             }
 
-            // TODO отправляем object прикладному уровню
+            // TODO РѕС‚РїСЂР°РІР»СЏРµРј object РїСЂРёРєР»Р°РґРЅРѕРјСѓ СѓСЂРѕРІРЅСЋ
             System.out.println((String) object);
         }
         else {

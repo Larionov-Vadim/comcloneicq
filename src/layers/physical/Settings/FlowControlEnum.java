@@ -20,6 +20,10 @@ public enum FlowControlEnum {
         this.value = value;
     }
 
+    public static int size() {
+        return 5;
+    }
+
     @Override
     public String toString() {
         return name;

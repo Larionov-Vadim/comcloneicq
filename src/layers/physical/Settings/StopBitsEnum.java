@@ -18,6 +18,10 @@ public enum StopBitsEnum {
         this.value = value;
     }
 
+    public static int size() {
+        return 3;
+    }
+
     @Override
     public String toString() {
         return name;

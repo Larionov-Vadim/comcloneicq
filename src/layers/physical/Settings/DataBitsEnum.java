@@ -19,6 +19,10 @@ public enum DataBitsEnum {
         this.value = value;
     }
 
+    public static int size() {
+        return 4;
+    }
+
     @Override
     public String toString() {
         return name;
@@ -31,6 +35,8 @@ public enum DataBitsEnum {
     public int getValue() {
         return value;
     }
+
+
 
     public static boolean contains(String name) {
         for (DataBitsEnum databits : DataBitsEnum.values())
