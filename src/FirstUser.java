@@ -40,7 +40,7 @@ public class FirstUser {
         String str = "init";
 
         // Ожидание подключения собеседника
-        System.out.println("Ожидание подключения собеседника...");
+        System.out.println("Waiting for connection...");
         while(!datalinkLayer.isConnected()) {
             try {
                 Thread.sleep(100);
@@ -49,8 +49,8 @@ public class FirstUser {
             }
         }
 
-        System.out.println("Соединение установлено, общайтесь!");
-        while (str != null && !str.equals("q") && datalinkLayer.isConnected()) {
+        System.out.println("Let's Go!");
+        while (str != null && !str.equals("q") && !str.equals("exit") && datalinkLayer.isConnected()) {
             try {
                 str = bufferRead.readLine();
             } catch (IOException e) {
