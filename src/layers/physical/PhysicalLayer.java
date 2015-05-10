@@ -4,12 +4,14 @@ import gnu.io.*;
 import layers.datalink.DatalinkLayer;
 import layers.datalink.Frame;
 import layers.physical.Settings.ComPortSettings;
+import utils.Messages;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.*;
 import java.util.logging.*;
+
 
 /**
  * Created by Vadim on 18.04.2015.
@@ -84,15 +86,10 @@ public class PhysicalLayer implements SerialPortEventListener {
 
             inputStream = serialPort.getInputStream();
             outputStream = serialPort.getOutputStream();
-
-            // TODO
-            System.out.println("isCD: " + serialPort.isCD());
-            System.out.println("isCTD: " + serialPort.isCTS());
-            System.out.println("isDRT: " + serialPort.isDSR());
-            System.out.println("isDTR: " + serialPort.isDTR());
-            System.out.println("isRTS: " + serialPort.isRTS());
-
-        } catch (PortInUseException | UnsupportedCommOperationException | IOException | NoSuchPortException e) {
+        } catch (PortInUseException e) {
+            notifyOnMessage(Messages.PORT_IN_USE);
+            LOGGER.log(Level.WARNING, "Обработанное исключение", e);
+        } catch (UnsupportedCommOperationException | NoSuchPortException | IOException e) {
             LOGGER.log(Level.WARNING, "Обработанное исключение", e);
         }
 
@@ -110,15 +107,12 @@ public class PhysicalLayer implements SerialPortEventListener {
         serialPort.setRTS(true);
         serialPort.setDTR(true);
 
-        // TODO удалить
-        serialPort.notifyOnBreakInterrupt(true);
-        serialPort.notifyOnFramingError(true);
-        serialPort.notifyOnOutputEmpty(true);
-        serialPort.notifyOnRingIndicator(true);
-        serialPort.notifyOnOverrunError(true);
-        serialPort.notifyOnParityError(true);
-
-        setConnected(true);
+        if (checkConnection()) {
+            setConnected(true);
+            notifyOnMessage(Messages.CONNECTED);
+        }
+        else
+            setConnected(false);
     }
 
     public synchronized void disconnect() {
@@ -143,7 +137,10 @@ public class PhysicalLayer implements SerialPortEventListener {
         else {
             LOGGER.info("Port is not opened");
         }
-        connected = false;
+
+        setConnected(false);
+        // TODO надо сообщать?
+        notifyOnMessage(Messages.DISCONNECTED);
     }
 
 
@@ -158,39 +155,34 @@ public class PhysicalLayer implements SerialPortEventListener {
     @Override
     public void serialEvent(SerialPortEvent event) {
         switch(event.getEventType()) {
-            case SerialPortEvent.BI:        // Break Interrupt
+            case SerialPortEvent.BI:                    // Break Interrupt
                 LOGGER.warning("Break Interrupt");
                 break;
-            case SerialPortEvent.CD:        // Carried Detect (наличие несущей)
-                // TODO
-                System.out.println("CD=[" + serialPort.isCD() + "]");
-                break;
-            case SerialPortEvent.CTS:       // Clear to Send (готовность передачи)
-                System.out.println("CTS=[" + serialPort.isCTS() + "]");
+            case SerialPortEvent.CTS:                   // Clear to Send (готовность передачи)
+                boolean status = checkConnection();
+                if (connected ^ status) {
+                    if (status)
+                        notifyOnMessage(Messages.CONNECTED);
+                    else
+                        notifyOnMessage(Messages.DISCONNECTED);
+                }
                 break;
             case SerialPortEvent.DATA_AVAILABLE:
                 dataAvailable();
                 break;
-            case SerialPortEvent.DSR:       // Data set Ready (готовность источника данных)
-                System.out.println("DSR=[" + serialPort.isDSR() + "]");
+            case SerialPortEvent.DSR:                   // Data set Ready (готовность источника данных)
                 break;
-            case SerialPortEvent.FE:        // Framing Error
+            case SerialPortEvent.FE:                    // Framing Error
                 LOGGER.warning("Framing Error");
                 break;
             case SerialPortEvent.OE:        // Overrun Error
                 LOGGER.warning("Overrun Error");
                 break;
-            case SerialPortEvent.OUTPUT_BUFFER_EMPTY:
-                break;
             case SerialPortEvent.PE:        // Parity Error
                 LOGGER.warning("Parity error");
                 break;
-            case SerialPortEvent.RI:        // Ring Indicator (сигнал вызова)
-                break;
         }
     }
-
-
 
     private void dataAvailable() {
         ArrayList<Byte> bytes = new ArrayList<>(Frame.MAX_DATA_SIZE);
@@ -226,4 +218,11 @@ public class PhysicalLayer implements SerialPortEventListener {
         return datalinkLayer;
     }
 
+    private boolean checkConnection() {
+        return serialPort.isCD() && serialPort.isDSR() && serialPort.isCTS();
+    }
+
+    private void notifyOnMessage(Messages message) {
+        getUpperLayer().notifyOnMessage(message);
+    }
 }

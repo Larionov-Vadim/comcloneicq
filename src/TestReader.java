@@ -18,7 +18,7 @@ public class TestReader {
             System.out.println(str);
         }
 
-        String portName = PhysicalLayer.getAvailablePorts().get(2);
+        String portName = PhysicalLayer.getAvailablePorts().get(3);
         int baudRate = ComPortSettings.getAvailableBaudRates().get(5);
         DataBitsEnum databits = ComPortSettings.getAvailableDataBits().get(3);
         StopBitsEnum stopbits = ComPortSettings.getAvailableStopBits().get(0);
@@ -26,5 +26,14 @@ public class TestReader {
 
         ComPortSettings settings = new ComPortSettings(portName, baudRate, databits, stopbits, parity);
         datalinkLayer.connect(settings);
+
+        while(!datalinkLayer.isConnected()) {
+            System.out.println("a");
+        }
+        System.out.println("Seend!");
+        datalinkLayer.send("Ну чО1");
+        datalinkLayer.send("Ну чО2");
+        datalinkLayer.send("Ну чО3");
+
     }
 }
