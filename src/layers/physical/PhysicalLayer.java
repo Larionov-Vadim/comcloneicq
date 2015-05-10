@@ -159,8 +159,10 @@ public class PhysicalLayer implements SerialPortEventListener {
             case SerialPortEvent.CTS:                   // Clear to Send (готовность передачи)
                 boolean status = checkConnection();
                 if (connected ^ status) {
-                    if (status)
+                    if (status) {
+                        setConnected(true);
                         notifyOnMessage(Messages.CONNECTED);
+                    }
                     else {
                         notifyOnMessage(Messages.DISCONNECTED);
                         disconnect();
