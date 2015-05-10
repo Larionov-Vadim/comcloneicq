@@ -4,7 +4,7 @@ import gnu.io.*;
 import layers.datalink.DatalinkLayer;
 import layers.datalink.Frame;
 import layers.physical.Settings.ComPortSettings;
-import utils.Messages;
+import messages.Messages;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -139,8 +139,6 @@ public class PhysicalLayer implements SerialPortEventListener {
         }
 
         setConnected(false);
-        // TODO надо сообщать?
-        notifyOnMessage(Messages.DISCONNECTED);
     }
 
 
@@ -163,8 +161,10 @@ public class PhysicalLayer implements SerialPortEventListener {
                 if (connected ^ status) {
                     if (status)
                         notifyOnMessage(Messages.CONNECTED);
-                    else
+                    else {
                         notifyOnMessage(Messages.DISCONNECTED);
+                        disconnect();
+                    }
                 }
                 break;
             case SerialPortEvent.DATA_AVAILABLE:
@@ -199,8 +199,7 @@ public class PhysicalLayer implements SerialPortEventListener {
                 }
             }
             else {
-                System.out.print(start + " ");
-                // LOGGER.log(Level.WARNING, "Принятый байт данных != START_BYTE");
+                LOGGER.log(Level.WARNING, "Принятый байт данных != START_BYTE");
             }
         } catch (IOException e) {
             LOGGER.log(Level.SEVERE, "Обработанное исключение", e);

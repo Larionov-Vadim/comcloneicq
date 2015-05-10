@@ -2,7 +2,7 @@ package layers.datalink;
 
 import layers.physical.PhysicalLayer;
 import layers.physical.Settings.ComPortSettings;
-import utils.Messages;
+import messages.Messages;
 import utils.Utils;
 
 import java.io.*;
@@ -30,10 +30,10 @@ public class DatalinkLayer implements Runnable {
     private AtomicBoolean sendRet = new AtomicBoolean(false);
     private AtomicBoolean permissionToTransmit = new AtomicBoolean(true);
 
-    private int sendingDelay = 1000;
     private boolean connected = false;
     private boolean threadRun = false;
 
+    private int sendingDelay = 100;
 
     // TODO Нужен ApplicationLayer
     public DatalinkLayer() {
@@ -89,15 +89,17 @@ public class DatalinkLayer implements Runnable {
         sendRet.set(false);
         permissionToTransmit.set(true);
         connected = getLowerLayer().isConnected();
-        if (connected)
-            notifyOnMessage(Messages.CONNECTED);
         threadRun = true;
         Thread sendingThread = new Thread(this);
         sendingThread.start();
     }
 
     public void disconnect() {
+        setDisconnectParams();
         getLowerLayer().disconnect();
+    }
+
+    private void setDisconnectParams() {
         connected = false;
         threadRun = false;
         permissionToTransmit.set(false);
@@ -105,6 +107,7 @@ public class DatalinkLayer implements Runnable {
         sendAck.set(false);
         sendRet.set(false);
     }
+
 
     public PhysicalLayer getLowerLayer() {
         return physicalLayer;
@@ -118,6 +121,7 @@ public class DatalinkLayer implements Runnable {
          *      Если пришёл RET, либо TIMEOUT истёк, то повторяем отправку кадра
          */
         while(threadRun) {
+            // System.out.println("permissionToTransmit: " + permissionToTransmit.get());
             if (permissionToTransmit.get()) {
                 if (sendRet.get()) {
                     getLowerLayer().send(Frame.newRETFrame().serialize());
@@ -128,7 +132,7 @@ public class DatalinkLayer implements Runnable {
                 else if (sendAck.get()) {
                     getLowerLayer().send(Frame.newACKFrame().serialize());
                     sendAck.set(false);
-                    permissionToTransmit.set(false);
+                    permissionToTransmit.set(true);
                 }
 
                 else if (!framesToSend.isEmpty()) {
@@ -141,7 +145,6 @@ public class DatalinkLayer implements Runnable {
             try {
                 Thread.sleep(sendingDelay);
             } catch (InterruptedException e) {
-                // TODO
                 LOGGER.log(Level.SEVERE, "Обработанное исключение", e);
             }
         }
@@ -155,7 +158,7 @@ public class DatalinkLayer implements Runnable {
         Frame frame = Frame.deserialize(data);
 
         if (frame.isCorrect()) {
-            System.out.println("Type frame: " + frame.getType().name());
+            // System.out.println("Type frame: " + frame.getType().name());
             switch (frame.getType()){
                 case ACK:
                     framesToSend.poll();
@@ -221,6 +224,7 @@ public class DatalinkLayer implements Runnable {
     }
 
     public void notifyOnMessage(Messages message) {
+        System.out.println("notifyOnMessage: " + message.name());
         switch (message) {
             case CONNECTED:
                 LOGGER.info("Connected");
@@ -228,7 +232,7 @@ public class DatalinkLayer implements Runnable {
                 break;
             case DISCONNECTED:
                 LOGGER.info("Disconnected");
-                setConnected(false);
+                setDisconnectParams();
                 break;
         }
         // TODO

@@ -23,7 +23,7 @@ public class SecondUser {
     }
 
     private static ComPortSettings getDefaultSettings() {
-        String portName = PhysicalLayer.getAvailablePorts().get(3);         // TODO индивидуальное значение
+        String portName = PhysicalLayer.getAvailablePorts().get(4);         // TODO индивидуальное значение
         int baudRate = ComPortSettings.getAvailableBaudRates().get(5);
         DataBitsEnum databits = ComPortSettings.getAvailableDataBits().get(3);
         StopBitsEnum stopbits = ComPortSettings.getAvailableStopBits().get(0);

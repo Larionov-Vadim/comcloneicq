@@ -139,7 +139,7 @@ public class Frame {
         return new Frame(typeFrame, info, flagFinal);
     }
 
-    // TODO удалить
+    // TODO рудименты
     public static void main(String[] args) {
         byte[] dataIn = "Hello!".getBytes();
         Frame frameIn = new Frame(Type.I, dataIn, true);
