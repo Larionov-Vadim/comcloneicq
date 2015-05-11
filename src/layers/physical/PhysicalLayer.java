@@ -70,11 +70,12 @@ public class PhysicalLayer implements SerialPortEventListener {
         }
     }
 
-    public void connect(ComPortSettings settings) {
+    public boolean connect(ComPortSettings settings) {
         if (serialPort != null)
             disconnect();
 
         String port = settings.getPort();
+
         try {
             CommPortIdentifier portId = CommPortIdentifier.getPortIdentifier(port);
             serialPort = (SerialPort) portId.open(PORT_NAME, TIMEOUT);
@@ -89,6 +90,7 @@ public class PhysicalLayer implements SerialPortEventListener {
         } catch (PortInUseException e) {
             notifyOnMessage(Messages.PORT_IN_USE);
             LOGGER.log(Level.WARNING, "Обработанное исключение", e);
+            return false;
         } catch (UnsupportedCommOperationException | NoSuchPortException | IOException e) {
             LOGGER.log(Level.WARNING, "Обработанное исключение", e);
         }
@@ -113,6 +115,7 @@ public class PhysicalLayer implements SerialPortEventListener {
         }
         else
             setConnected(false);
+        return true;
     }
 
     public synchronized void disconnect() {

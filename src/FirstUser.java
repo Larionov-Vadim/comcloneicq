@@ -4,6 +4,7 @@ import layers.physical.Settings.ComPortSettings;
 import layers.physical.Settings.DataBitsEnum;
 import layers.physical.Settings.ParityEnum;
 import layers.physical.Settings.StopBitsEnum;
+import messages.TestSerialize;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -22,6 +23,17 @@ public class FirstUser {
         }
     }
 
+    private static void waitConnection() {
+        System.out.println("Waiting for connection...");
+        while(!datalinkLayer.isConnected()) {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     private static ComPortSettings getDefaultSettings() {
         String portName = PhysicalLayer.getAvailablePorts().get(3);         // TODO индивидуальное значение
         int baudRate = ComPortSettings.getAvailableBaudRates().get(5);
@@ -34,25 +46,34 @@ public class FirstUser {
 
     public static void main(String[] args)  {
         printAvailablePorts();
-        datalinkLayer.connect(getDefaultSettings());
+        if (!datalinkLayer.connect(getDefaultSettings())) {
+            System.out.println("Error");
+            return;
+        }
 
         BufferedReader bufferRead = new BufferedReader(new InputStreamReader(System.in));
+        String login = "unknown";
         String str = "init";
 
-        // Ожидание подключения собеседника
-        System.out.println("Waiting for connection...");
-        while(!datalinkLayer.isConnected()) {
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+        System.out.print("Your Login: ");
+        try {
+            login = bufferRead.readLine();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+
+        TestSerialize packageAppLayer = new TestSerialize();
+        packageAppLayer.setLogin(login);
+
+        // Ожидание подключения собеседника
+        waitConnection();
 
         System.out.println("Let's Go!");
         while (str != null && !str.equals("q") && !str.equals("exit") && datalinkLayer.isConnected()) {
             try {
+                System.out.print(login + ": ");
                 str = bufferRead.readLine();
+                packageAppLayer.setMessage(str);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -60,4 +81,5 @@ public class FirstUser {
         }
         datalinkLayer.disconnect();
     }
+
 }

@@ -3,6 +3,7 @@ package layers.datalink;
 import layers.physical.PhysicalLayer;
 import layers.physical.Settings.ComPortSettings;
 import messages.Messages;
+import messages.TestSerialize;
 import utils.Utils;
 
 import java.io.*;
@@ -83,8 +84,9 @@ public class DatalinkLayer implements Runnable {
     }
 
 
-    public void connect(ComPortSettings settings) {
-        getLowerLayer().connect(settings);
+    public boolean connect(ComPortSettings settings) {
+        if (!getLowerLayer().connect(settings))
+            return false;
         sendAck.set(false);
         sendRet.set(false);
         permissionToTransmit.set(true);
@@ -92,6 +94,7 @@ public class DatalinkLayer implements Runnable {
         threadRun = true;
         Thread sendingThread = new Thread(this);
         sendingThread.start();
+        return true;
     }
 
     public void disconnect() {
@@ -200,7 +203,10 @@ public class DatalinkLayer implements Runnable {
             }
 
             // TODO отправляем object прикладному уровню
-            System.out.println((String) object);
+            if (object instanceof String)
+                System.out.println((String) object);
+            else if (object instanceof TestSerialize)
+                ((TestSerialize) object).print();
         }
         else {
             receivedFrames.add(frame);
