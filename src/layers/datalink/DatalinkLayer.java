@@ -125,7 +125,7 @@ public class DatalinkLayer implements Runnable {
          */
         while(threadRun) {
             // System.out.println("permissionToTransmit: " + permissionToTransmit.get());
-            if (permissionToTransmit.get()) {
+            if (permissionToTransmit.get() && getLowerLayer().readyToSend()) {
                 if (sendRet.get()) {
                     getLowerLayer().send(Frame.newRETFrame().serialize());
                     sendRet.set(false);

@@ -47,7 +47,7 @@ public class Frame {
 
     /**
      * Максимальный размер (в байтах) кадра с учётом стартовых и стоповых бит
-     */
+    */
     public static final int MAX_FRAME_SIZE = 262;
 
     private static CRCCoder crcCoder = new CRCCoder();

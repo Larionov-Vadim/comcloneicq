@@ -77,7 +77,7 @@ public class FirstUser {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            datalinkLayer.send(str);
+            datalinkLayer.send(packageAppLayer);
         }
         datalinkLayer.disconnect();
     }

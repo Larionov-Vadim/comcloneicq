@@ -25,7 +25,8 @@ public class TestSerialize implements Serializable {
     }
 
     public void print() {
-        System.out.print(login + ": ");
-        System.out.println(message);
+        if (login == null)
+            System.out.println("LOGIN IS NULL!");
+        System.out.println(login + ": " + message);
     }
 }
