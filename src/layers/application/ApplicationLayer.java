@@ -14,22 +14,39 @@ import java.util.*;
  */
 public class ApplicationLayer {
     private JPanel panel1;
-    private JComboBox comboBox1;
-    private JComboBox comboBox2;
-    private JComboBox comboBox3;
-    private JComboBox comboBox4;
-    private JComboBox comboBox51;
-    private JTextField textField1;
+    private JComboBox speedSettings;
+    private JComboBox bitsOfData;
+    private JComboBox stopBits;
+    private JComboBox paritySettings;
+    private JComboBox comPortName;
+    private JTextField nameField;
     private JButton GoButton;
     private DatalinkLayer datalinkLayer;
+    private DialogWindow linkToAppl;
+    private JFrame frame;
+    private String name;
+
 
     public DatalinkLayer getDatalinkLayer() {
         return datalinkLayer;
-        //comboBox1.set
+
+            }
+
+    public DialogWindow getLinkToAppl() {
+        return linkToAppl;
+    }
+
+    public void setLinkToAppl(DialogWindow linkToAppl) {
+        this.linkToAppl = linkToAppl;
     }
 
     public void setDatalinkLayer(DatalinkLayer datalinkLayer) {
         this.datalinkLayer = datalinkLayer;
+    }
+
+    public ApplicationLayer giveLinkToHimself(){
+
+        return this;
     }
 
     public ApplicationLayer() {
@@ -42,7 +59,7 @@ public class ApplicationLayer {
         }
 
         DefaultComboBoxModel model = new DefaultComboBoxModel(availablePorts);
-        comboBox51.setModel(model);
+        comPortName.setModel(model);
         datalinkLayer = new DatalinkLayer(this);
         GoButton.addActionListener(new ActionListener() {
 
@@ -51,57 +68,53 @@ public class ApplicationLayer {
 
                // DatalinkLayer datalinkLayer = new DatalinkLayer();// static ?
 
-                int baudRate = ComPortSettings.getAvailableBaudRates().get(comboBox1.getSelectedIndex());
-                DataBitsEnum dataBitsEnum = ComPortSettings.getAvailableDataBits().get(comboBox2.getSelectedIndex());
-                ParityEnum parityEnum = ComPortSettings.getAvailableParity().get(comboBox4.getSelectedIndex());
-                StopBitsEnum stopBitsEnum = ComPortSettings.getAvailableStopBits().get(comboBox3.getSelectedIndex());
-                ComPortSettings settings = new ComPortSettings((String) comboBox51.getSelectedItem(),baudRate,dataBitsEnum,stopBitsEnum,parityEnum);
+                int baudRate = ComPortSettings.getAvailableBaudRates().get(speedSettings.getSelectedIndex());
+                DataBitsEnum dataBitsEnum = ComPortSettings.getAvailableDataBits().get(bitsOfData.getSelectedIndex());
+                ParityEnum parityEnum = ComPortSettings.getAvailableParity().get(paritySettings.getSelectedIndex());
+                StopBitsEnum stopBitsEnum = ComPortSettings.getAvailableStopBits().get(stopBits.getSelectedIndex());
+                ComPortSettings settings = new ComPortSettings((String) comPortName.getSelectedItem(),baudRate,dataBitsEnum,stopBitsEnum,parityEnum);
 
                 datalinkLayer.connect(settings);
+
 
                 /*
                 System.out.println(baudRate);
                 System.out.println(dataBitsEnum);
                 System.out.println(parityEnum);
                 System.out.println(stopBitsEnum);
-                textField1.setText("Работает");
+                nameField.setText("Работает");
                 */
 
 
 
-                DialogWindow dialogWindow = new DialogWindow(ApplicationLayer.this);
 
-                dialogWindow.callDialogWindow(textField1.getText());
+                DialogWindow linkToAppl = new DialogWindow(giveLinkToHimself());
+                linkToAppl.setReference(giveLinkToHimself());
+                setLinkToAppl(linkToAppl);
+
+                AskingClass greetMessage = new AskingClass();
+
+
+               linkToAppl.getUsers(new User(nameField.getText()));
+
+
+               // users.
+               greetMessage.setEnterInfoMessage("Привет, я " + nameField.getText() + " и я подключен");
+               // linkToAppl.takeSomething(greetMessage);
+
+                linkToAppl.callDialogWindow();
+                datalinkLayer.send(greetMessage.giveMessage());
+
+
+              //  ApplicationLayer.this.setFrame(frame.setEnabled(true));
+
 
             }
 
         });
     }
 
-    public JPanel getPanel1() {
-        return panel1;
-    }
-    public JComboBox getComboBox1() {
-        return comboBox1;
-    }
-    public JComboBox getComboBox2() {
-        return comboBox2;
-    }
-    public JComboBox getComboBox3() {
-        return comboBox3;
-    }
-    public JComboBox getComboBox4() {
-        return comboBox4;
-    }
-    public JComboBox getComboBox51() {
-        return comboBox51;
-    }
-    public JTextField getTextField1() {
-        return textField1;
-    }
-    public JButton getGoButtonButton() {
-        return GoButton;
-    }
+
 
     public DatalinkLayer getLowerLayer() {
         return datalinkLayer;
@@ -114,35 +127,46 @@ public class ApplicationLayer {
 
 
         ApplicationLayer applicationLayer = new ApplicationLayer();
+        applicationLayer.gettingStarted(applicationLayer);
 
 
-        applicationLayer.gettingStarted();
+
 
 
     }
 
 
-    public void gettingStarted()
+    public void gettingStarted(ApplicationLayer applicationLayer)
     {
 
 
         //тут меняем стиль
-       styleChange();
 
 
 
-        JFrame frame = new JFrame("Давайте настроимся!");
-        frame.setContentPane(new ApplicationLayer().panel1);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.pack();
-        frame.setVisible(true);
 
+        //setFrame(new JFrame("Давайте настроимся!"));
+        //JFrame
+        applicationLayer.frame = new JFrame("Давайте настроимся1!");
+        applicationLayer.styleChange(applicationLayer);
+
+        applicationLayer.frame.setContentPane(applicationLayer.panel1);
+        applicationLayer.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        applicationLayer.frame.pack();
+        applicationLayer.frame.setVisible(true);
+
+
+
+      //if(frame.isEnabled()==true)
+         // frame.setVisible(false);
+
+        //setFrame(frame);
 
     }
 
 
 
-    public void styleChange(){
+    public void styleChange(ApplicationLayer applicationLayer){
 
 
         try {
@@ -159,6 +183,27 @@ public class ApplicationLayer {
     }
 
 
+    public JFrame getFrame() {
+        return frame;
+    }
+
+    public void setFrame(JFrame frame) {
+        this.frame = frame;
+    }
+
+    public void setName(String name){
+        this.name=name;
+
+    }
+
+    public String getName (){
+
+        return name;
+    }
 
 }
+
+
+
+
 

@@ -61,19 +61,19 @@ public class DatalinkLayer implements Runnable {
     }
 
     /**
-     * РџСЂРµРѕР±СЂР°Р·СѓРµС‚ РїР°РєРµС‚С‹ РїСЂРёРєР»Р°РґРЅРѕРіРѕ СѓСЂРѕРІРЅСЏ РІ РєР°РґСЂС‹ РєР°РЅР°Р»СЊРЅРѕРіРѕ СѓСЂРѕРІРЅСЏ Рё РєР»Р°РґС‘С‚ РёС… РІ РѕС‡РµСЂРµРґСЊ.
-     *  Р’ РґСЂСѓРіРѕРј РїРѕС‚РѕРєРµ РїСЂРѕРёСЃС…РѕРґРёС‚ РѕС‚РїСЂР°РІРєР° РєР°РґСЂРѕРІ РЅР° С„РёР·РёС‡РµСЃРєРёР№ СѓСЂРѕРІРµРЅСЊ.
-     * @param object РЎРµСЂРёР°Р»РёР·СѓРµРјС‹Р№ РѕР±СЉРµРєС‚, РїР°РєРµС‚ РїСЂРёРєР»Р°РґРЅРѕРіРѕ СѓСЂРѕРІРЅСЏ.
+     * Преобразует пакеты прикладного уровня в кадры канального уровня и кладёт их в очередь.
+     *  В другом потоке происходит отправка кадров на физический уровень.
+     * @param object Сериализуемый объект, пакет прикладного уровня.
      */
     public synchronized void send(Object object) {
         byte[] data = new byte[0];
         try {
             data = serialize(object);
         } catch (IOException e) {
-            LOGGER.log(Level.SEVERE, "РћС€РёР±РєР° СЃРµСЂРёР°Р»РёР·Р°С†РёРё РѕР±СЉРµРєС‚Р°", e);
+            LOGGER.log(Level.SEVERE, "Ошибка сериализации объекта", e);
         }
 
-        // Р”СЂРѕР±РёРј РґР°РЅРЅС‹Рµ РЅР° РєР°РґСЂС‹
+        // Дробим данные на кадры
         int chunkSize = Frame.MAX_DATA_SIZE;
         int countFrames = data.length / chunkSize + (data.length % chunkSize == 0 ? 0 : 1);
         boolean flagFinal = false;
@@ -117,9 +117,9 @@ public class DatalinkLayer implements Runnable {
     @Override
     public void run() {
         /**
-         * РџРѕРєР° РµСЃС‚СЊ СЃРѕРµРґРёРЅРµРЅРёРµ, РїСЂРѕРІРµСЂСЏРµРј РѕС‡РµСЂРµРґСЊ framesToSend
-         * Р•СЃР»Рё РѕС‡РµСЂРµРґСЊ РЅРµ РїСѓСЃС‚Р°, С‚Рѕ РѕС‚РїСЂР°РІР»СЏРµРј РїР°РєРµС‚ Рё Р¶РґС‘Рј ACK
-         *      Р•СЃР»Рё РїСЂРёС€С‘Р» RET, Р»РёР±Рѕ TIMEOUT РёСЃС‚С‘Рє, С‚Рѕ РїРѕРІС‚РѕСЂСЏРµРј РѕС‚РїСЂР°РІРєСѓ РєР°РґСЂР°
+         * Пока есть соединение, проверяем очередь framesToSend
+         * Если очередь не пуста, то отправляем пакет и ждём ACK
+         *      Если пришёл RET, либо TIMEOUT истёк, то повторяем отправку кадра
          */
         while(connected) {
             if (permissionToTransmit.get()) {
@@ -136,7 +136,12 @@ public class DatalinkLayer implements Runnable {
                 }
 
                 else if (!framesToSend.isEmpty()) {
-                    getLowerLayer().send(framesToSend.peek().serialize());
+                    byte[] bytes = framesToSend.peek().serialize();
+//                    System.out.println("bytes: " + bytes.length);
+//                    for (int i = 0; i < bytes.length; ++i) {
+//                        System.out.print(bytes[i] + " ");
+//                    }
+                    getLowerLayer().send(bytes);
                     permissionToTransmit.set(false);
                 }
             }
@@ -151,8 +156,8 @@ public class DatalinkLayer implements Runnable {
     }
 
     /**
-     * РџРѕР»СѓС‡Р°РµС‚ РєР°РґСЂС‹ СЃ С„РёР·РёС‡РµСЃРєРѕРіРѕ СѓСЂРѕРІРЅСЏ
-     * @param data РњР°СЃСЃРёРІ Р±Р°Р№С‚ (РєР°РґСЂ) СЃ С„РёР·РёС‡РµСЃРєРѕРіРѕ СѓСЂРѕРІРЅСЏ
+     * Получает кадры с физического уровня
+     * @param data Массив байт (кадр) с физического уровня
      */
     public void receive(byte[] data) {
         Frame frame = Frame.deserialize(data);
@@ -185,8 +190,6 @@ public class DatalinkLayer implements Runnable {
     }
 
     private void receivedInfoFrame(Frame frame) {
-        // Р�Р· СЃРїРёСЃРєР° receivedFrames РґРѕСЃС‚Р°С‘Рј РІСЃРµ СЌР»РµРјРµРЅС‚С‹ Рё СЃРѕР±РёСЂР°РµРј РёС… РІ РѕРґРёРЅ РѕР±СЉРµРєС‚
-
         if (frame.isFinalFrame()) {
             byte[] data = new byte[0];
             for(Frame f : receivedFrames)
@@ -202,8 +205,12 @@ public class DatalinkLayer implements Runnable {
                 LOGGER.log(Level.SEVERE, "РћС€РёР±РєР° РґРµСЃРµСЂРёР°Р»РёР·Р°С†РёРё РѕР±СЉРµРєС‚Р°", e);
             }
 
-            // TODO РѕС‚РїСЂР°РІР»СЏРµРј object РїСЂРёРєР»Р°РґРЅРѕРјСѓ СѓСЂРѕРІРЅСЋ
-            System.out.println((String) object);
+            // TODO отправляем object прикладному уровню
+
+            System.out.println("Output");
+
+            //System.out.println((String) object);
+            applicationLayer.getLinkToAppl().takeSomething(object);
         }
         else {
             receivedFrames.add(frame);
