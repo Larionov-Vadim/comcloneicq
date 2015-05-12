@@ -46,10 +46,6 @@ public class FirstUser {
 
     public static void main(String[] args)  {
         printAvailablePorts();
-        if (!datalinkLayer.connect(getDefaultSettings())) {
-            System.out.println("Error");
-            return;
-        }
 
         BufferedReader bufferRead = new BufferedReader(new InputStreamReader(System.in));
         String login = "unknown";
@@ -60,6 +56,11 @@ public class FirstUser {
             login = bufferRead.readLine();
         } catch (IOException e) {
             e.printStackTrace();
+        }
+
+        if (!datalinkLayer.connect(getDefaultSettings())) {
+            System.out.println("Error");
+            return;
         }
 
         TestSerialize packageAppLayer = new TestSerialize();

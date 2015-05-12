@@ -4,6 +4,7 @@ import layers.physical.PhysicalLayer;
 import layers.physical.Settings.ComPortSettings;
 import messages.Messages;
 import messages.TestSerialize;
+import sun.rmi.runtime.Log;
 import utils.Utils;
 
 import java.io.*;
@@ -34,7 +35,17 @@ public class DatalinkLayer implements Runnable {
     private boolean connected = false;
     private boolean threadRun = false;
 
+    /** Задержка в мс между отправкой каждого кадра*/
     private int sendingDelay = 100;
+
+    /** Если не придёт подтверждение ACK на кадр INFO, то кадр INFO
+     * будет отправлен повторно через время = sendingDelay*waitingCycles */
+    private static final int initWaitingCycles = 2000;
+    private int waitingCycles = initWaitingCycles;
+
+    private static final int initMaxFails = 5;
+    private int fails = initMaxFails;
+    private AtomicBoolean repeatSend = new AtomicBoolean(false);
 
     // TODO Нужен ApplicationLayer
     public DatalinkLayer() {
@@ -124,7 +135,6 @@ public class DatalinkLayer implements Runnable {
          *      Если пришёл RET, либо TIMEOUT истёк, то повторяем отправку кадра
          */
         while(threadRun) {
-            // System.out.println("permissionToTransmit: " + permissionToTransmit.get());
             if (permissionToTransmit.get() && getLowerLayer().readyToSend()) {
                 if (sendRet.get()) {
                     getLowerLayer().send(Frame.newRETFrame().serialize());
@@ -142,11 +152,27 @@ public class DatalinkLayer implements Runnable {
                     byte[] bytes = framesToSend.peek().serialize();
                     getLowerLayer().send(bytes);
                     permissionToTransmit.set(false);
+                    repeatSend.set(true);
                 }
             }
 
             try {
                 Thread.sleep(sendingDelay);
+
+                if (repeatSend.get()) {
+                    --waitingCycles;
+                    if (waitingCycles <= 0) {
+                        --fails;
+                        if (fails <= 0) {
+                            LOGGER.warning("Разрыв соединения в связи с периодическим неполучением ACK-кадров");
+                            notifyOnMessage(Messages.DISCONNECTED);
+                            disconnect();
+                            return;
+                        }
+                        LOGGER.info("Разрешение на переотправку кадра");
+                        permissionToTransmit.set(true);
+                    }
+                }
             } catch (InterruptedException e) {
                 LOGGER.log(Level.SEVERE, "Обработанное исключение", e);
             }
@@ -164,6 +190,10 @@ public class DatalinkLayer implements Runnable {
             // System.out.println("Type frame: " + frame.getType().name());
             switch (frame.getType()){
                 case ACK:
+                    repeatSend.set(false);
+                    fails = initMaxFails;
+                    waitingCycles = initWaitingCycles;
+
                     framesToSend.poll();
                     permissionToTransmit.set(true);
                     break;
