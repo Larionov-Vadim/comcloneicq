@@ -56,25 +56,35 @@ public class PhysicalLayer implements SerialPortEventListener {
     }
 
     public synchronized void send(byte[] data) {
-//        serialPort.setRTS(false);
-//        try {
-//            Thread.sleep(100);
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
+        // TODO не проверено
+        serialPort.setRTS(false);
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
         try {
             outputStream.write(data);
         } catch (IOException e) {
             LOGGER.log(Level.WARNING, "Обработанное исключение", e);
+            // TODO notifyOnMessage(Error);
         }
+
+        try{
+            outputStream.flush();
+        } catch (IOException e) {
+            LOGGER.log(Level.WARNING, "Обработанное исключение", e);
+        }
+        serialPort.setRTS(true);
     }
 
-    public void connect(ComPortSettings settings) {
+    public boolean connect(ComPortSettings settings) {
         if (serialPort != null)
             disconnect();
 
         String port = settings.getPort();
+
         try {
             CommPortIdentifier portId = CommPortIdentifier.getPortIdentifier(port);
             serialPort = (SerialPort) portId.open(PORT_NAME, TIMEOUT);
@@ -89,8 +99,10 @@ public class PhysicalLayer implements SerialPortEventListener {
         } catch (PortInUseException e) {
             notifyOnMessage(Messages.PORT_IN_USE);
             LOGGER.log(Level.WARNING, "Обработанное исключение", e);
+            return false;
         } catch (UnsupportedCommOperationException | NoSuchPortException | IOException e) {
             LOGGER.log(Level.WARNING, "Обработанное исключение", e);
+            return false;
         }
 
         try {
@@ -102,6 +114,7 @@ public class PhysicalLayer implements SerialPortEventListener {
             serialPort.notifyOnCarrierDetect(true);
         } catch (TooManyListenersException e) {
             LOGGER.log(Level.WARNING, "Обработанное исключение", e);
+            return false;
         }
 
         serialPort.setRTS(true);
@@ -113,19 +126,19 @@ public class PhysicalLayer implements SerialPortEventListener {
         }
         else
             setConnected(false);
+        return true;
     }
 
-    public synchronized void disconnect() {
+    public void disconnect() {
         if (serialPort != null) {
+            serialPort.setRTS(false);
+            serialPort.setDTR(false);
             try {
                 inputStream.close();
                 outputStream.close();
             } catch (IOException e) {
                 LOGGER.log(Level.WARNING, "Обработанное исключение", e);
             }
-
-            serialPort.setRTS(false);
-            serialPort.setDTR(false);
             serialPort.close();
 
             LOGGER.info("Port " + serialPort.getName() + " closed");
@@ -157,6 +170,7 @@ public class PhysicalLayer implements SerialPortEventListener {
                 LOGGER.warning("Break Interrupt");
                 break;
             case SerialPortEvent.CTS:                   // Clear to Send (готовность передачи)
+                // TODO
                 boolean status = checkConnection();
                 if (connected ^ status) {
                     if (status) {
@@ -220,7 +234,11 @@ public class PhysicalLayer implements SerialPortEventListener {
     }
 
     private boolean checkConnection() {
-        return serialPort.isCD() && serialPort.isDSR() && serialPort.isCTS();
+        return serialPort.isCD();
+    }
+
+    public boolean readyToSend() {
+        return serialPort.isDSR() && serialPort.isCTS();
     }
 
     private void notifyOnMessage(Messages message) {

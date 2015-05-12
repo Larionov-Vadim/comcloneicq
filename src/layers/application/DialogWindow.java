@@ -59,11 +59,11 @@ public class DialogWindow {
                 closingFrame.add(panel2);
 
                 closingFrame.setSize(600, 600);
-
+                closingFrame.repaint();
                 closingFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                 //closingFrame.pack();
                 closingFrame.setVisible(true);
-                closingFrame.repaint();
+
 
 
 

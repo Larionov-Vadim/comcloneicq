@@ -73,7 +73,7 @@ public class FileForm {
         int result = catalog.showOpenDialog(frame);
        // String stringPath = new String(catalog.);
         File filePath = catalog.getSelectedFile();
-        System.out.println("Am i wrong");
+
 
         CatalogClass catalogClass = new CatalogClass();
         List <String> fileNames = new ArrayList();
@@ -90,7 +90,7 @@ public class FileForm {
         catalogClass.setAmount(fileNames.size());
         catalogClass.setFileCatalog(fileNames);
         catalogClass.setPath(filePath);
-        System.out.println("IMA BIRD");
+
         applicationLayer.getLowerLayer().send(catalogClass);
 
 
