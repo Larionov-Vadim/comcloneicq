@@ -1,11 +1,13 @@
 package layers.application;
 import javax.swing.*;
 import  java.io.*;
+import java.io.Serializable;
+
 
 /**
 хурма про файлики
  */
-public class FilesClass {
+public class FilesClass implements Serializable {
 
     /* Вывести содержимое каталога, каталог - фиксированная папочка, но где? надо ли её задавать??
     * функция взять файл TODO
@@ -20,6 +22,47 @@ public class FilesClass {
 
 
     private String fileName;
+    private String wholeFile;
+    private String path;
+
+    public String getWholeFile() {
+        return wholeFile;
+    }
+
+    public void setWholeFile(String symbol) {
+        this.wholeFile="";
+    }
+
+    public void incrFile(String symb){
+
+        wholeFile = wholeFile + symb;
+
+    }
+    public void wholeFile(String name)
+    {
+        this.fileName = name;
+
+
+    }
+
+    public String getPath() {
+        return path;
+    }
+
+    public void setPath(String path) {
+        this.path = path;
+
+
+    }
+
+    public String getFileName() {
+        return fileName;
+    }
+
+    public void setFileName(String fileName) {
+        this.fileName = fileName;
+    }
+
     //private String   ????? TODO
     //подумай
 
@@ -33,9 +76,6 @@ public class FilesClass {
 
     public void workMethod(){
 
-        JFrame fileFrame = new JFrame("Работа с файлами");
-        fileFrame.setSize(200, 300);
-        fileFrame.setVisible(true);
 
 
 

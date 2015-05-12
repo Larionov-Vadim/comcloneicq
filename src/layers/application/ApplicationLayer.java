@@ -25,7 +25,7 @@ public class ApplicationLayer {
     private DialogWindow linkToAppl;
     private JFrame frame;
     private String name;
-
+    private User users;
 
     public DatalinkLayer getDatalinkLayer() {
         return datalinkLayer;
@@ -95,15 +95,17 @@ public class ApplicationLayer {
                 AskingClass greetMessage = new AskingClass();
 
 
-               linkToAppl.getUsers(new User(nameField.getText()));
+
+                linkToAppl.getApplicationLayer().setUsers(new User(nameField.getText()));
 
 
-               // users.
-               greetMessage.setEnterInfoMessage("Привет, я " + nameField.getText() + " и я подключен");
-               // linkToAppl.takeSomething(greetMessage);
+
+                // users.
+               greetMessage.setEnterInfoMessage("\nСобеседник " + nameField.getText() + " подключен\n");
+               //linkToAppl.takeSomething(greetMessage);
 
                 linkToAppl.callDialogWindow();
-                datalinkLayer.send(greetMessage.giveMessage());
+                datalinkLayer.send(greetMessage);
 
 
               //  ApplicationLayer.this.setFrame(frame.setEnabled(true));
@@ -127,6 +129,7 @@ public class ApplicationLayer {
 
 
         ApplicationLayer applicationLayer = new ApplicationLayer();
+        applicationLayer.styleChange();
         applicationLayer.gettingStarted(applicationLayer);
 
 
@@ -147,13 +150,14 @@ public class ApplicationLayer {
 
         //setFrame(new JFrame("Давайте настроимся!"));
         //JFrame
-        applicationLayer.frame = new JFrame("Давайте настроимся1!");
-        applicationLayer.styleChange(applicationLayer);
+        applicationLayer.frame = new JFrame("Давайте настроимся");
+        styleChange();
 
         applicationLayer.frame.setContentPane(applicationLayer.panel1);
         applicationLayer.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         applicationLayer.frame.pack();
         applicationLayer.frame.setVisible(true);
+        applicationLayer.styleChange();
 
 
 
@@ -166,13 +170,14 @@ public class ApplicationLayer {
 
 
 
-    public void styleChange(ApplicationLayer applicationLayer){
+    public static void styleChange(){
 
 
         try {
             for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
                 if ("Nimbus".equals(info.getName())) {
                     UIManager.setLookAndFeel(info.getClassName());
+
                     break;
                 }
             }
@@ -201,6 +206,13 @@ public class ApplicationLayer {
         return name;
     }
 
+    public User getUsers() {
+        return users;
+    }
+
+    public void setUsers(User users) {
+        this.users = users;
+    }
 }
 
 

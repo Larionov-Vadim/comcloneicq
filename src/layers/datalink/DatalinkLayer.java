@@ -3,6 +3,7 @@ package layers.datalink;
 import layers.application.ApplicationLayer;
 import layers.physical.PhysicalLayer;
 import layers.physical.Settings.ComPortSettings;
+import messages.Messages;
 import utils.Utils;
 
 import java.io.*;
@@ -31,9 +32,10 @@ public class DatalinkLayer implements Runnable {
     private AtomicBoolean sendRet = new AtomicBoolean(false);
     private AtomicBoolean permissionToTransmit = new AtomicBoolean(true);
 
-    private int sendingDelay = 1000;
     private boolean connected = false;
+    private boolean threadRun = false;
 
+    private int sendingDelay = 100;
 
     // TODO РќСѓР¶РµРЅ ApplicationLayer
     public DatalinkLayer(ApplicationLayer applicationLayer) {
@@ -95,14 +97,20 @@ public class DatalinkLayer implements Runnable {
         sendAck.set(false);
         sendRet.set(false);
         permissionToTransmit.set(true);
-        connected = true;
+        connected = getLowerLayer().isConnected();
+        threadRun = true;
         Thread sendingThread = new Thread(this);
         sendingThread.start();
     }
 
     public void disconnect() {
+        setDisconnectParams();
         getLowerLayer().disconnect();
+    }
+
+    private void setDisconnectParams() {
         connected = false;
+        threadRun = false;
         permissionToTransmit.set(false);
         framesToSend.clear();
         sendAck.set(false);
@@ -121,7 +129,8 @@ public class DatalinkLayer implements Runnable {
          * Если очередь не пуста, то отправляем пакет и ждём ACK
          *      Если пришёл RET, либо TIMEOUT истёк, то повторяем отправку кадра
          */
-        while(connected) {
+        while(threadRun) {
+            // System.out.println("permissionToTransmit: " + permissionToTransmit.get());
             if (permissionToTransmit.get()) {
                 if (sendRet.get()) {
                     getLowerLayer().send(Frame.newRETFrame().serialize());
@@ -132,15 +141,11 @@ public class DatalinkLayer implements Runnable {
                 else if (sendAck.get()) {
                     getLowerLayer().send(Frame.newACKFrame().serialize());
                     sendAck.set(false);
-                    permissionToTransmit.set(false);
+                    permissionToTransmit.set(true);
                 }
 
                 else if (!framesToSend.isEmpty()) {
                     byte[] bytes = framesToSend.peek().serialize();
-//                    System.out.println("bytes: " + bytes.length);
-//                    for (int i = 0; i < bytes.length; ++i) {
-//                        System.out.print(bytes[i] + " ");
-//                    }
                     getLowerLayer().send(bytes);
                     permissionToTransmit.set(false);
                 }
@@ -149,8 +154,7 @@ public class DatalinkLayer implements Runnable {
             try {
                 Thread.sleep(sendingDelay);
             } catch (InterruptedException e) {
-                // TODO
-                LOGGER.log(Level.SEVERE, "Interrupt Exception in Thread.sleep(sendingDelay)", e);
+                LOGGER.log(Level.SEVERE, "Обработанное исключение", e);
             }
         }
     }
@@ -162,9 +166,8 @@ public class DatalinkLayer implements Runnable {
     public void receive(byte[] data) {
         Frame frame = Frame.deserialize(data);
 
-
         if (frame.isCorrect()) {
-            System.out.println("Type frame: " + frame.getType().name());
+            // System.out.println("Type frame: " + frame.getType().name());
             switch (frame.getType()){
                 case ACK:
                     framesToSend.poll();
@@ -217,9 +220,12 @@ public class DatalinkLayer implements Runnable {
         }
     }
 
-
     public boolean isConnected() {
-        return getLowerLayer().isConnected();
+        return connected;
+    }
+
+    private void setConnected(boolean connected) {
+        this.connected = connected;
     }
 
     public void setSendingDelay(int sendingDelay) {
@@ -230,4 +236,19 @@ public class DatalinkLayer implements Runnable {
         return sendingDelay;
     }
 
+    public void notifyOnMessage(Messages message) {
+        System.out.println("notifyOnMessage: " + message.name());
+        switch (message) {
+            case CONNECTED:
+                LOGGER.info("Connected");
+                setConnected(true);
+                break;
+            case DISCONNECTED:
+                LOGGER.info("Disconnected");
+                setDisconnectParams();
+                break;
+        }
+        // TODO
+        // getUpperLayer.notifyOnMessage(message);
+    }
 }

@@ -1,5 +1,7 @@
 package layers.application;
 
+import layers.datalink.Frame;
+
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -14,26 +16,48 @@ public class FileForm {
     private JButton chooseCatalogButton;
     private JButton chooseFileButton;
     private JComboBox comboBox1;
-    private JButton button1;
     private JButton обратноКСообщениямButton;
     private ApplicationLayer applicationLayer;
+    private FileForm linkToHimSelfFileForm;
 
 
-    public FileForm(JFrame frame) {
+
+    public FileForm(JFrame frame, ApplicationLayer applicationLayer) {
         chooseCatalogButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-
-                chooseCatalog(frame);
+                JFrame frame = new JFrame();
+                chooseCatalog(frame, applicationLayer);
+                comboBox1.setModel(setExistFiles(applicationLayer));
 
             }
         });
+        chooseFileButton.addActionListener(new ActionListener() {
+
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+            FileNameClass fileNameSend = new FileNameClass();
+                fileNameSend.setTwiceSend(false);
+                fileNameSend.setFileName((String)applicationLayer.getLinkToAppl().getFileForm().comboBox1.getSelectedItem());
+                //textField1.setText((String) comboBox1.getSelectedItem());
+                applicationLayer.getLowerLayer().send(fileNameSend);
+
+            }
+
+
+        });
+
+
     }
 
     public void wannaFile(ApplicationLayer applicationLayer) {
 
+
+        this.setApplicationLayer(applicationLayer);
         JFrame frame = new JFrame("Поработаем с файлами");
-        frame.setContentPane(new FileForm(frame).panel1);
+        frame.setContentPane(new FileForm(frame, applicationLayer).panel1);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.pack();
         frame.setVisible(true);
@@ -42,13 +66,13 @@ public class FileForm {
 
     }
 
-    public void chooseCatalog (JFrame frame){
+    public void chooseCatalog (JFrame frame, ApplicationLayer applicationLayer){
 
         JFileChooser catalog = new JFileChooser();
         catalog.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
         int result = catalog.showOpenDialog(frame);
-
-        File filePath = (catalog.getCurrentDirectory());
+       // String stringPath = new String(catalog.);
+        File filePath = catalog.getSelectedFile();
         System.out.println("Am i wrong");
 
         CatalogClass catalogClass = new CatalogClass();
@@ -62,6 +86,7 @@ public class FileForm {
             }
         }
 
+
         catalogClass.setAmount(fileNames.size());
         catalogClass.setFileCatalog(fileNames);
         catalogClass.setPath(filePath);
@@ -74,6 +99,48 @@ public class FileForm {
 
 
 
+    public DefaultComboBoxModel setExistFiles(ApplicationLayer applicationLayer){
 
+        this.setApplicationLayer(applicationLayer);
+            List<String> files = applicationLayer.getLinkToAppl().getCatalogClassTemp().getFileCatalog();
+            String[] availableFiles = new String[applicationLayer.getLinkToAppl().getCatalogClassTemp().getAmount()];
+            for (int i = 0; i < applicationLayer.getLinkToAppl().getCatalogClassTemp().getAmount(); ++i) {
+                availableFiles[i] = files.get(i);
+
+            }
+
+           // comboBox1 = new JComboBox();
+
+            DefaultComboBoxModel model = new DefaultComboBoxModel(availableFiles);
+            applicationLayer.getLinkToAppl().getFileForm().comboBox1.setModel(model);
+
+
+
+
+        return model;
+
+
+
+        }
+
+    public ApplicationLayer getApplicationLayer() {
+        return applicationLayer;
+    }
+
+    public void setApplicationLayer(ApplicationLayer applicationLayer) {
+        this.applicationLayer = applicationLayer;
+    }
+
+    public FileForm getLinkToHimSelfFileForm() {
+        return linkToHimSelfFileForm;
+    }
+
+    public void setLinkToHimSelfFileForm(FileForm linkToHimSelfFileForm) {
+        this.linkToHimSelfFileForm = linkToHimSelfFileForm;
+    }
+
+    public void setComboBox1(DefaultComboBoxModel model) {
+        comboBox1.setModel(model);
+    }
 }
 

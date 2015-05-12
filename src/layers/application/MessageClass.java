@@ -1,4 +1,5 @@
 package layers.application;
+import java.io.Serializable;
 
 
 
@@ -7,21 +8,21 @@ package layers.application;
 
 
  */
-public class MessageClass {
+public class MessageClass implements Serializable{
 
     private String writenMessage;
-    private int infoValue;
+
 
     public void MessageClass() {
 
         writenMessage = "";
-        infoValue = 1488;
+
 
     }
 
     public void MessageClass(String mes, int inf){
         writenMessage = mes;
-        infoValue = inf;
+
 
     }
 
@@ -29,17 +30,13 @@ public class MessageClass {
         this.writenMessage = writenMessage;
     }
 
-    public void setInfoValue(int infoValue) {
-        this.infoValue = infoValue;
-    }
+
 
     public String getWritenMessage() {
         return writenMessage;
     }
 
-    public int getInfoValue() {
-        return infoValue;
-    }
+
 
 
 }

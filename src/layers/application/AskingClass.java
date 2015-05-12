@@ -1,9 +1,10 @@
 package layers.application;
+import java.io.Serializable;
 
 /**
  запрос каталога, запрос файла, запросы короче
  */
-public class AskingClass {
+public class  AskingClass implements Serializable {
 
  private int infoStuff;
   /**

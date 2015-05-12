@@ -1,4 +1,5 @@
 package layers.application;
+import java.io.Serializable;
 
 import java.io.File;
 import java.util.List;
@@ -6,7 +7,7 @@ import java.util.List;
 /**
 содержимое каталога
  */
-public class CatalogClass {
+public class CatalogClass implements Serializable{
     private List<String> fileCatalog;
     private int amount;
     private File path;
@@ -41,10 +42,5 @@ public class CatalogClass {
     }
 
 
-    public void GettingFileToMemory (String fileName, CatalogClass catalogMessage){
 
-        
-
-
-    }
 }
