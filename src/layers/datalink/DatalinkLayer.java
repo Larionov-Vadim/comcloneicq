@@ -59,11 +59,11 @@ public class DatalinkLayer implements Runnable {
     private AtomicBoolean repeatSend = new AtomicBoolean(false);
 
     // TODO Нужен ApplicationLayer
-/*>>>>>>> 322118ecec71bc0899fa2aa2e218032cad7480c9
+
     public DatalinkLayer() {
         this.physicalLayer = new PhysicalLayer(this);
         this.applicationLayer = null;
-    }*/
+    }
 
     private byte[] serialize(Object object) throws IOException {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
