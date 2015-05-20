@@ -5,8 +5,6 @@ import java.io.Serializable;
 
 
 public class FileNameClass implements Serializable{
-
-
     private String fileName;
     private Boolean twiceSend;
 
@@ -24,5 +22,10 @@ public class FileNameClass implements Serializable{
 
     public void setTwiceSend(Boolean twiceSend) {
         this.twiceSend = twiceSend;
+    }
+
+    @Override
+    public String toString() {
+        return fileName;
     }
 }

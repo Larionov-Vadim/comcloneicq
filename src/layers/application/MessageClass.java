@@ -3,18 +3,12 @@ import java.io.Serializable;
 
 
 
-/**
-
-
-
- */
 public class MessageClass implements Serializable{
 
     private String writenMessage;
 
 
     public void MessageClass() {
-
         writenMessage = "";
 
 
@@ -29,8 +23,6 @@ public class MessageClass implements Serializable{
     public void setWritenMessage(String writenMessage) {
         this.writenMessage = writenMessage;
     }
-
-
 
     public String getWritenMessage() {
         return writenMessage;

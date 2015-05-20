@@ -2,15 +2,17 @@ package layers.application;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.*;
-
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 public class DialogWindow {
-
+    private static final Logger LOGGER = Logger.getLogger(DialogWindow.class.getName());
 
     private JPanel panel1;
     private JTextField inputMessage;
@@ -18,9 +20,10 @@ public class DialogWindow {
     private JButton STOPButton;
     private JButton wantFiles;
     private JTextArea areaForMessages;
-   // private Image image;
+    // private Image image;
     private User users;
     private FileForm fileForm;
+   private String pathTemp;
 
 
     private ApplicationLayer applicationLayer;
@@ -34,14 +37,12 @@ public class DialogWindow {
             public void actionPerformed(ActionEvent e) {
 
                 MessageClass newMessage = new MessageClass();
-                newMessage.setWritenMessage(inputMessage.getText());
+                newMessage.setWritenMessage(inputMessage.getText()+"\n");
 
 
                 //System.out.println(newMessage.getWritenMessage());
 
-                areaForMessages.append(applicationLayer.getUsers().ToString()+": "+ newMessage.getWritenMessage() + "\n");
-
-
+                areaForMessages.append(applicationLayer.getUsers().ToString() + ": " + newMessage.getWritenMessage() + "\n");
 
 
                 applicationLayer.getLowerLayer().send(newMessage);
@@ -53,16 +54,12 @@ public class DialogWindow {
             @Override
             public void actionPerformed(ActionEvent e) {
                 applicationLayer.getLowerLayer().disconnect();
-                JFrame closingFrame = new JFrame("Вы разорвали соединение");
 
-                MyDrawPanel panel2 = new MyDrawPanel();
-                closingFrame.add(panel2);
+                JFrame frame = new JFrame("Соединение Разорвано");
+                frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+                frame.pack();
+                frame.setVisible(true);
 
-                closingFrame.setSize(600, 600);
-                closingFrame.repaint();
-                closingFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-                //closingFrame.pack();
-                closingFrame.setVisible(true);
 
 
 
@@ -80,7 +77,7 @@ public class DialogWindow {
                 applicationLayer.getLowerLayer().send(wantFileMessage);
                 JFrame form = new JFrame();
 
-                FileForm fileForm = new FileForm(form,applicationLayer);
+                FileForm fileForm = new FileForm(form, applicationLayer);
                 applicationLayer.getLinkToAppl().fileForm = fileForm;
                 fileForm.setLinkToHimSelfFileForm(fileForm);
 
@@ -88,13 +85,9 @@ public class DialogWindow {
                 fileForm.wannaFile(applicationLayer);
 
 
-
             }
         });
     }
-
-
-
 
 
     public JTextField getInputMessage() {
@@ -108,12 +101,6 @@ public class DialogWindow {
     public void callDialogWindow() {
 
 
-
-
-
-
-
-
         JFrame frame = new JFrame("Окно сообщений");
 
 
@@ -124,110 +111,99 @@ public class DialogWindow {
         frame.pack();
         frame.setVisible(true);
 
-       // this.areaForMessages.append(applicationLayer.getUsers().ToString());
-        this.areaForMessages.append("Приветствую, "+ applicationLayer.getUsers().ToString() + ", собеседник пока не\nподключен, стоит немного подождать\n");
+        // this.areaForMessages.append(applicationLayer.getUsers().ToString());
+        this.areaForMessages.append("Приветствую, " + applicationLayer.getUsers().ToString() + ", собеседник пока не\nподключен, стоит немного подождать\n");
 
-
+        inputMessage.selectAll();
+        inputMessage.requestFocus();
 
         applicationLayer.setLinkToAppl(this);
-
-
-
-
-
-
 
 
     }
 
 
-   // public get
+    // public get
 
-    public void takeSomething (Object object) {
+    public void takeSomething(Object object) {
 
         if (object instanceof AskingClass)
             areaForMessages.append(((AskingClass) object).giveMessage());
 
         if (object instanceof MessageClass) {
 
-            areaForMessages.append(((MessageClass) object).getWritenMessage());
+            areaForMessages.append( ((MessageClass) object).getWritenMessage());
+            areaForMessages.append("\n");
         }
 //
 
         if (object instanceof CatalogClass) {
 
-            setCatalogClassTemp((CatalogClass)object);
+            setCatalogClassTemp((CatalogClass) object);
+
+
+            System.out.println("CatalogClassRecieved:"+ ((CatalogClass) object).getPath());
 
             applicationLayer.getLinkToAppl().getFileForm().setComboBox1(applicationLayer.getLinkToAppl().fileForm.setExistFiles(applicationLayer));
         }
 
+
+
         if (object instanceof FileNameClass) {
+            System.out.println("received FileNameClass");
 
-            if(((FileNameClass) object).isTwiceSend()==false){
-
+           if (!((FileNameClass) object).isTwiceSend()) {
                 ((FileNameClass) object).setTwiceSend(true);
                 applicationLayer.getLowerLayer().send(object);
 
+               applicationLayer.getLinkToAppl().setPathTemp(applicationLayer.getLinkToAppl().getCatalogClassTemp().getPath().toString() + "\\" + ((FileNameClass) object).getFileName());
+            System.out.println("\n путь петля true "+ pathTemp  +"\n");
+
             }
             else {
-                String fullPath = new String(applicationLayer.getLinkToAppl().getCatalogClassTemp().getPath().toString() + "\\" + ((FileNameClass) object).getFileName());
+
+                String fullPath = applicationLayer.getLinkToAppl().getCatalogClassTemp().getPath().toString() + "\\" + ((FileNameClass) object).getFileName();
+                System.out.println("fullPath: " + fullPath);
+
                 FilesClass imFile = new FilesClass();
-                imFile.setWholeFile(((FileNameClass)object).toString());
+                imFile.setFileName(((FileNameClass) object).getFileName());
+                //imFile.setWholeFile(((FileNameClass) object).toString());
 
+                imFile.setPath(applicationLayer.getLinkToAppl().getCatalogClassTemp().getPath().toString());
 
-           imFile.setPath(applicationLayer.getLinkToAppl().getCatalogClassTemp().getPath().toString());
-
-                imFile.incrFile(read(imFile.getFileName().toString()));
-                System.out.println(read(imFile.getFileName().toString()));
+                imFile.setData(read(fullPath));
                 applicationLayer.getLowerLayer().send(imFile);
-        }}
 
-        if (object instanceof FilesClass ){
 
-            File pathTemp = new File(((FilesClass) object).getPath()+"\\"+((FilesClass) object).getFileName());
-            String fileTemp = new String(((FilesClass) object).getWholeFile());
 
-            File file = new File(pathTemp.toString());
-
-            try {
-                //проверяем, что если файл не существует то создаем его
-                if(!file.exists()){
-                    file.createNewFile();
-                }
-
-                //PrintWriter обеспечит возможности записи в файл
-                PrintWriter out = new PrintWriter(file.getAbsoluteFile());
-
-                try {
-                    //Записываем текст у файл
-                    out.print(fileTemp);
-                } finally {
-                    //После чего мы должны закрыть файл
-                    //Иначе файл не запишется
-                    out.close();
-                }
-            } catch(IOException e) {
-                throw new RuntimeException(e);
             }
-
-
-
-
-
-
         }
 
 
 
+        if (object instanceof FilesClass) {
+            System.out.println("Пришел файлик FilesClass");
+            FilesClass filesClass = (FilesClass) object;
+            //File pathTemp = new File(((FilesClass) object).getPath() + "\\" + ((FilesClass) object).getFileName());
+            System.out.println(pathTemp);
+            File file = new File(pathTemp);
 
-
-
-
-
-
+            try {
+                //проверяем, что если файл не существует то создаем его
+                if (!file.exists()) {
+                    file.createNewFile();
+                }
+                try(FileOutputStream fos = new FileOutputStream(file)) {
+                    byte[] buffer = filesClass.getData();
+                    fos.write(buffer, 0, buffer.length);
+                }
+            } catch (IOException e) {
+                LOGGER.log(Level.WARNING, "Обработанное исключение", e);
+            }
+        }
     }
 
-    public void setReference (ApplicationLayer applicationLayer1){
+    public void setReference(ApplicationLayer applicationLayer1) {
 
         applicationLayer = applicationLayer1;
 
@@ -241,9 +217,9 @@ public class DialogWindow {
         this.areaForMessages = areaForMessages;
     }
 
-    public void getUsers(User name){
+    public void getUsers(User name) {
 
-        this.users=name;
+        this.users = name;
 
     }
 
@@ -267,58 +243,62 @@ public class DialogWindow {
         return applicationLayer;
     }
 
-    public static String read(String fileName)  {
-        File file = new File(fileName);
-        //Этот спец. объект для построения строки
-        StringBuilder sb = new StringBuilder();
-
-
-
-        try {
-            //Объект для чтения файла в буфер
-            BufferedReader in = new BufferedReader(new FileReader( file.getAbsoluteFile()));
-            try {
-                //В цикле построчно считываем файл
-                String s;
-                while ((s = in.readLine()) != null) {
-                    sb.append(s);
-                    sb.append("\n");
-                }
-            } finally {
-                //Также не забываем закрыть файл
-                in.close();
-            }
-        } catch(IOException e) {
-
-            System.out.println("HHHHHHHHHHHHHHHH");
-
+    public static byte[] read(String filePath) {
+        byte[] buffer = null;
+        System.out.println("read filePath: " + filePath);
+        try (FileInputStream fin = new FileInputStream(filePath)) {
+            buffer = new byte[fin.available()];
+            fin.read(buffer, 0, fin.available());
+        } catch (IOException e) {
+            LOGGER.log(Level.WARNING, "Обработанное исключение", e);
         }
-
-        //Возвращаем полученный текст с файла
-        return sb.toString();
+        if (buffer == null)
+            LOGGER.warning("buffer is null");
+        return buffer;
     }
 
 
+    public String getPathTemp() {
+        return pathTemp;
+    }
 
-
-
+    public void setPathTemp(String pathTemp) {
+        this.pathTemp = pathTemp;
+    }
 }
 
 
-class  MyDrawPanel extends JPanel{
+class  MyDrawPanel extends JFrame{
 
-    public void paintComponent (Graphics g){
-
-
-
-            Image image = new ImageIcon("stopPic.jpg").getImage();
-            g.drawImage(image, 3, 4, this);
+    public void MyDrawPanel(){
 
 
-            System.out.println("DUMB");
+
+            ImageIcon image =  new ImageIcon(("stopPic.jpg"));
+
+        String [] columnNames = {"hh","hhh"};
+
+        Object[][] data =
+                {
+                        {image, "About"},
+
+                };
+
+        DefaultTableModel model = new DefaultTableModel(data,columnNames);
+        JTable table = new JTable( model )
+        {
+            //  Returning the Class of each column will allow different
+            //  renderers to be used based on Class
+
+        };
+        table.setPreferredScrollableViewportSize(table.getPreferredSize());
+
+        JScrollPane scrollPane = new JScrollPane( table );
+        getContentPane().add(scrollPane);
+    }
 
         }
 
-    }
+
 
 

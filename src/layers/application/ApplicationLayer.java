@@ -66,7 +66,7 @@ public class ApplicationLayer {
             @Override
             public void actionPerformed(ActionEvent e) {
 
-               // DatalinkLayer datalinkLayer = new DatalinkLayer();// static ?
+
 
                 int baudRate = ComPortSettings.getAvailableBaudRates().get(speedSettings.getSelectedIndex());
                 DataBitsEnum dataBitsEnum = ComPortSettings.getAvailableDataBits().get(bitsOfData.getSelectedIndex());
@@ -109,7 +109,7 @@ public class ApplicationLayer {
 
 
               //  ApplicationLayer.this.setFrame(frame.setEnabled(true));
-
+                frame.setVisible(false);
 
             }
 
@@ -126,9 +126,14 @@ public class ApplicationLayer {
 
     static public void main(String[] args) {
 
-
-
         ApplicationLayer applicationLayer = new ApplicationLayer();
+      //  DialogWindow dw = new DialogWindow(applicationLayer);
+       // String str = new String("C:\\Test1\\1111.txt");
+       // String  temp= new String (dw.read(str)) ;
+
+
+
+
         applicationLayer.styleChange();
         applicationLayer.gettingStarted(applicationLayer);
 

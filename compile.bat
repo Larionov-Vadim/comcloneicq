@@ -6,6 +6,7 @@ del out\*
 echo Compile
 dir /s /B *.java > sources.txt
 javac -d out -classpath lib\mfz-rxtx-2.2-20081207-win-x64\RXTXcomm.jar. @sources.txt
+pause
 del sources.txt
 
 echo Creating FirstUser.jar

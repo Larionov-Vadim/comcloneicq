@@ -9,8 +9,8 @@ import java.util.List;
  */
 public class CatalogClass implements Serializable{
     private List<String> fileCatalog;
-    private int amount;
-    private File path;
+    private int amount = 0;
+    private File path;  // TODO
 
     public void setFileCatalog(List<String> catalog){
 

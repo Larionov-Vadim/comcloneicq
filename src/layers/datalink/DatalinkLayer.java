@@ -219,11 +219,11 @@ public class DatalinkLayer implements Runnable {
                     permissionToTransmit.set(true);
                     break;
                 default:
-                    LOGGER.warning("РљР°РґСЂ РЅРµРёР·РІРµСЃС‚РЅРѕРіРѕ С‚РёРїР°");
+                    LOGGER.warning("Кадр неизвестного типа");
             }
         }
         else {
-            LOGGER.log(Level.INFO, "РљР°РґСЂ РёСЃРїРѕСЂС‡РµРЅ");
+            LOGGER.log(Level.INFO, "Кадр испорчен");
             sendRet.set(true);
             permissionToTransmit.set(true);
         }
@@ -242,7 +242,7 @@ public class DatalinkLayer implements Runnable {
             try {
                 object = deserialize(data);
             } catch (IOException | ClassNotFoundException e) {
-                LOGGER.log(Level.SEVERE, "РћС€РёР±РєР° РґРµСЃРµСЂРёР°Р»РёР·Р°С†РёРё РѕР±СЉРµРєС‚Р°", e);
+                LOGGER.log(Level.SEVERE, "Ошибка десериализации объекта", e);
             }
 
             // TODO отправляем object прикладному уровню

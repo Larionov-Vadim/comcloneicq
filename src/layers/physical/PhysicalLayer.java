@@ -186,7 +186,8 @@ public class PhysicalLayer implements SerialPortEventListener {
             case SerialPortEvent.DATA_AVAILABLE:
                 dataAvailable();
                 break;
-            case SerialPortEvent.DSR:                   // Data set Ready (готовность источника данных)
+            case SerialPortEvent.DSR:                   // Data set Ready
+
                 break;
             case SerialPortEvent.FE:                    // Framing Error
                 LOGGER.warning("Framing Error");

@@ -16,7 +16,7 @@ public class FileForm {
     private JButton chooseCatalogButton;
     private JButton chooseFileButton;
     private JComboBox comboBox1;
-    private JButton обратноКСообщениямButton;
+    private JButton BackToMessages;
     private ApplicationLayer applicationLayer;
     private FileForm linkToHimSelfFileForm;
 
@@ -29,7 +29,6 @@ public class FileForm {
                 JFrame frame = new JFrame();
                 chooseCatalog(frame, applicationLayer);
                 comboBox1.setModel(setExistFiles(applicationLayer));
-
             }
         });
         chooseFileButton.addActionListener(new ActionListener() {
@@ -38,9 +37,9 @@ public class FileForm {
             @Override
             public void actionPerformed(ActionEvent e) {
 
-            FileNameClass fileNameSend = new FileNameClass();
+                FileNameClass fileNameSend = new FileNameClass();
                 fileNameSend.setTwiceSend(false);
-                fileNameSend.setFileName((String)applicationLayer.getLinkToAppl().getFileForm().comboBox1.getSelectedItem());
+                fileNameSend.setFileName((String) applicationLayer.getLinkToAppl().getFileForm().comboBox1.getSelectedItem());
                 //textField1.setText((String) comboBox1.getSelectedItem());
                 applicationLayer.getLowerLayer().send(fileNameSend);
 
@@ -50,6 +49,14 @@ public class FileForm {
         });
 
 
+        BackToMessages.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                frame.setVisible(false);
+            }
+        });
     }
 
     public void wannaFile(ApplicationLayer applicationLayer) {
@@ -90,12 +97,11 @@ public class FileForm {
         catalogClass.setAmount(fileNames.size());
         catalogClass.setFileCatalog(fileNames);
         catalogClass.setPath(filePath);
-
+        System.out.println("FileForm.class filePath:" + catalogClass.getPath().toString());
         applicationLayer.getLowerLayer().send(catalogClass);
 
 
     }
-
 
 
 

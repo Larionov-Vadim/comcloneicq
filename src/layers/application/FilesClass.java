@@ -20,29 +20,16 @@ public class FilesClass implements Serializable {
     *
     * */
 
-
     private String fileName;
-    private String wholeFile;
     private String path;
+    private byte[] data;
 
-    public String getWholeFile() {
-        return wholeFile;
+    public void setData(byte[] data) {
+        this.data = data;
     }
 
-    public void setWholeFile(String symbol) {
-        this.wholeFile="";
-    }
-
-    public void incrFile(String symb){
-
-        wholeFile = wholeFile + symb;
-
-    }
-    public void wholeFile(String name)
-    {
-        this.fileName = name;
-
-
+    public byte[] getData() {
+        return data;
     }
 
     public String getPath() {
@@ -51,8 +38,6 @@ public class FilesClass implements Serializable {
 
     public void setPath(String path) {
         this.path = path;
-
-
     }
 
     public String getFileName() {
@@ -62,30 +47,7 @@ public class FilesClass implements Serializable {
     public void setFileName(String fileName) {
         this.fileName = fileName;
     }
-
-    //private String   ????? TODO
-    //подумай
-
-
-   // public String fileReader(){
-
-        //File myFile = new File("Test.txt");
-        //FileReader fileReader = new FileReader(myFile);
-
-//}
-
-    public void workMethod(){
-
-
-
-
-
-
-    }
-
-
-
-    }
+}
 
 
 
